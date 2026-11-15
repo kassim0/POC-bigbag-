@@ -10,8 +10,8 @@ Stack : backend Spring Boot 3.5 / Java 21 (`backend/`), frontend Angular (`front
 | 1 | Backend + recherche de jeux RAWG | ✅ fait |
 | 2 | CRUD GamesList (nom, ajout/retrait de jeux) | ✅ fait |
 | 3 | Frontend : accueil (3 premiers jeux par liste), détail/édition | ✅ fait |
-| 4 | Mode invité persistant | ⏳ en cours |
-| 5 | Commentaires par jeu et par liste | à faire |
+| 4 | Mode invité persistant | ✅ fait |
+| 5 | Commentaires par jeu et par liste | ⏳ en cours |
 | 6 | Compte utilisateur | à faire |
 | 7 | Partage en lecture seule par lien | à faire |
 
@@ -40,6 +40,10 @@ Stack : backend Spring Boot 3.5 / Java 21 (`backend/`), frontend Angular (`front
   - `list-detail/` : renommer (blur/Entrée), ajouter via `shared/game-search` (recherche RAWG avec debounce),
     retirer, supprimer la liste (avec confirmation).
   - En dev, `ng serve` proxifie `/api` vers `localhost:8080` (`proxy.conf.json`).
+- **Mode invité persistant** : le jeton invité est gardé dans `localStorage` (`bingbang.token`) ; les données
+  restent côté serveur (H2 fichier). L'invité retrouve donc son wallet après fermeture de l'onglet ou du
+  navigateur (vérifié en E2E avec un profil Chromium persistant fermé puis rouvert). Limite assumée : vider
+  les données du site = perdre l'accès au wallet invité (d'où le compte, phase 6).
 - **E2E** : `frontend/e2e/e2e.mjs` (Playwright installé globalement, pas une dépendance du projet) +
   `frontend/e2e/fake-rawg.mjs` (faux RAWG local, donc ni clé ni réseau).
 

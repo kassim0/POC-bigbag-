@@ -54,11 +54,25 @@ async function createListAndFillIt(page) {
   await shot(page, 'home');
 }
 
-const profile = mkdtempSync(join(tmpdir(), 'bingbang-e2e-'));
-const browser = await chromium.launchPersistentContext(profile);
-try {
+async function reopenBrowser(profile) {
+  // Same profile directory = same browser storage, as when a user closes then reopens their browser.
+  const browser = await chromium.launchPersistentContext(profile);
   const page = browser.pages()[0] ?? (await browser.newPage());
+  return { browser, page };
+}
+
+const profile = mkdtempSync(join(tmpdir(), 'bingbang-e2e-'));
+let { browser, page } = await reopenBrowser(profile);
+try {
   await createListAndFillIt(page);
+
+  await browser.close();
+  ({ browser, page } = await reopenBrowser(profile));
+  await page.goto(BASE);
+  const card = page.locator('.list-card', { hasText: 'Games I loved' });
+  await card.waitFor();
+  assert.deepEqual(await card.locator('.preview li > span').allTextContents(), ['Hades', 'Celeste', 'Outer Wilds']);
+  step('guest wallet is still there after closing and reopening the browser');
 } finally {
   await browser.close();
 }
