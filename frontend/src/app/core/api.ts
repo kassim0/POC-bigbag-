@@ -1,0 +1,44 @@
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
+import { Game, GameSearchResult, GamesList, Wallet } from './models';
+
+/** Typed access to the BingBang backend. */
+@Injectable({ providedIn: 'root' })
+export class Api {
+  private readonly http = inject(HttpClient);
+
+  searchGames(query: string, page = 1): Promise<GameSearchResult> {
+    return firstValueFrom(
+      this.http.get<GameSearchResult>('/api/games/search', { params: { q: query, page, pageSize: 8 } }),
+    );
+  }
+
+  wallet(): Promise<Wallet> {
+    return firstValueFrom(this.http.get<Wallet>('/api/wallet'));
+  }
+
+  setBackground(background: string): Promise<Wallet> {
+    return firstValueFrom(this.http.patch<Wallet>('/api/wallet', { background }));
+  }
+
+  createList(name: string, games: Game[]): Promise<GamesList> {
+    return firstValueFrom(this.http.post<GamesList>('/api/lists', { name, games }));
+  }
+
+  renameList(listId: number, name: string): Promise<GamesList> {
+    return firstValueFrom(this.http.patch<GamesList>(`/api/lists/${listId}`, { name }));
+  }
+
+  deleteList(listId: number): Promise<void> {
+    return firstValueFrom(this.http.delete<void>(`/api/lists/${listId}`));
+  }
+
+  addGame(listId: number, game: Game): Promise<GamesList> {
+    return firstValueFrom(this.http.post<GamesList>(`/api/lists/${listId}/games`, game));
+  }
+
+  removeGame(listId: number, rawgId: number): Promise<GamesList> {
+    return firstValueFrom(this.http.delete<GamesList>(`/api/lists/${listId}/games/${rawgId}`));
+  }
+}

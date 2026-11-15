@@ -1,0 +1,60 @@
+<a class="back" routerLink="/">← My games wallet</a>
+
+@if (list(); as list) {
+  <section class="card detail">
+    <label class="field title-field">
+      <span>List name</span>
+      <input
+        #name
+        class="title-input"
+        maxlength="100"
+        placeholder="Untitled list"
+        [value]="list.name"
+        (blur)="rename(name)"
+        (keydown.enter)="name.blur()"
+      />
+    </label>
+
+    <h2>Games ({{ list.games.length }})</h2>
+    @if (list.games.length === 0) {
+      <p class="muted">No game yet. Search the catalogue below to add your first one.</p>
+    }
+    <ul class="games">
+      @for (game of list.games; track game.rawgId) {
+        <li class="game">
+          <app-game-cover [game]="game" />
+          <div class="grow">
+            <h3>{{ game.name }}</h3>
+            @if (game.released) {
+              <p class="muted">Released {{ game.released }}</p>
+            }
+          </div>
+          <button type="button" class="ghost small" [attr.aria-label]="'Remove ' + game.name" (click)="remove(game)">
+            Remove
+          </button>
+        </li>
+      }
+    </ul>
+  </section>
+
+  <section class="card">
+    <app-game-search [excluded]="gameIds()" (picked)="add($event)" />
+  </section>
+
+  <section class="card danger-zone">
+    @if (confirmingDelete()) {
+      <p>Delete “{{ title() }}” for good?</p>
+      <button type="button" class="danger" (click)="deleteList()">Yes, delete it</button>
+      <button type="button" class="ghost" (click)="confirmingDelete.set(false)">Cancel</button>
+    } @else {
+      <button type="button" class="ghost danger-text" (click)="confirmingDelete.set(true)">Delete this list</button>
+    }
+  </section>
+} @else if (loaded()) {
+  <section class="card">
+    <h2>This games list does not exist</h2>
+    <p class="muted">It may have been deleted.</p>
+  </section>
+} @else if (!store.error()) {
+  <p class="loading">Opening your list…</p>
+}

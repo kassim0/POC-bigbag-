@@ -9,8 +9,8 @@ Stack : backend Spring Boot 3.5 / Java 21 (`backend/`), frontend Angular (`front
 |---|-------|------|
 | 1 | Backend + recherche de jeux RAWG | ✅ fait |
 | 2 | CRUD GamesList (nom, ajout/retrait de jeux) | ✅ fait |
-| 3 | Frontend : accueil (3 premiers jeux par liste), détail/édition | ⏳ en cours |
-| 4 | Mode invité persistant | à faire |
+| 3 | Frontend : accueil (3 premiers jeux par liste), détail/édition | ✅ fait |
+| 4 | Mode invité persistant | ⏳ en cours |
 | 5 | Commentaires par jeu et par liste | à faire |
 | 6 | Compte utilisateur | à faire |
 | 7 | Partage en lecture seule par lien | à faire |
@@ -32,9 +32,23 @@ Stack : backend Spring Boot 3.5 / Java 21 (`backend/`), frontend Angular (`front
 - **Erreurs** : `ApiException` + `ApiExceptionHandler` → corps JSON `{"error": "..."}`.
 - **CORS** : `bingbang.cors.allowed-origins` (par défaut `http://localhost:4200`).
 
+- **Frontend** (Angular 22, composants standalone, signals, zoneless, tests Vitest) :
+  - `core/` : `Api` (appels HTTP typés), `SessionService` (jeton), `authInterceptor` (ajoute le jeton, recrée
+    une session invité sur 401), `WalletStore` (état partagé en signals + message d'erreur), `Theme` (fond).
+  - `home/` : accueil = wallet, cartes de listes (`shared/list-card` : 3 premiers jeux + « + n more »),
+    formulaire de création (nom et/ou jeux), choix du fond (6 fonds prédéfinis, `body[data-bg]`).
+  - `list-detail/` : renommer (blur/Entrée), ajouter via `shared/game-search` (recherche RAWG avec debounce),
+    retirer, supprimer la liste (avec confirmation).
+  - En dev, `ng serve` proxifie `/api` vers `localhost:8080` (`proxy.conf.json`).
+- **E2E** : `frontend/e2e/e2e.mjs` (Playwright installé globalement, pas une dépendance du projet) +
+  `frontend/e2e/fake-rawg.mjs` (faux RAWG local, donc ni clé ni réseau).
+
 ## Commandes
 
 - Backend : `cd backend && mvn test` · lancer : `RAWG_API_KEY=xxx mvn spring-boot:run`
+- Frontend : `cd frontend && npm install && npx ng build && npx ng test --watch=false` · lancer : `npx ng serve`
+- E2E : `node e2e/fake-rawg.mjs` + backend avec `--rawg.base-url=http://localhost:9099/api --rawg.api-key=fake`
+  + `npx ng serve`, puis `node e2e/e2e.mjs`
 
 ## Points d'attention
 

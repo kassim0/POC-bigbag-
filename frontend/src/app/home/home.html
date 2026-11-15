@@ -1,0 +1,65 @@
+<header class="hero">
+  <h1>My games wallet</h1>
+  <p>Your cozy place for the games you loved and the ones you want to play.</p>
+</header>
+
+@if (store.wallet(); as wallet) {
+  <section class="toolbar" aria-label="Wallet settings">
+    <div class="backgrounds" role="group" aria-label="Background">
+      <span class="muted">Background</span>
+      @for (background of backgrounds; track background) {
+        <button
+          type="button"
+          class="swatch"
+          [attr.data-bg]="background"
+          [attr.aria-pressed]="wallet.background === background"
+          [title]="background"
+          (click)="store.setBackground(background)"
+        >
+          <span class="sr-only">{{ background }}</span>
+        </button>
+      }
+    </div>
+  </section>
+
+  <section class="grid" aria-label="Games lists">
+    @for (list of wallet.lists; track list.id) {
+      <a class="card list-card" [routerLink]="['/lists', list.id]">
+        <app-list-card [list]="list" />
+      </a>
+    }
+
+    <form class="card new-list" (submit)="create($event)">
+      <h2>New games list</h2>
+      <label class="field">
+        <span>Name</span>
+        <input
+          name="name"
+          maxlength="100"
+          placeholder="Games I liked, To play…"
+          [value]="newName()"
+          (input)="newName.set($any($event.target).value)"
+        />
+      </label>
+      <app-game-search label="Games (optional)" [excluded]="newGameIds()" (picked)="pick($event)" />
+      @if (newGames().length) {
+        <ul class="chips">
+          @for (game of newGames(); track game.rawgId) {
+            <li>
+              {{ game.name }}
+              <button type="button" class="icon" [attr.aria-label]="'Remove ' + game.name" (click)="unpick(game)">
+                ×
+              </button>
+            </li>
+          }
+        </ul>
+      }
+      <button type="submit" [disabled]="!canCreate()">Create list</button>
+      @if (!canCreate()) {
+        <p class="muted hint">Give it a name or add at least one game.</p>
+      }
+    </form>
+  </section>
+} @else if (!store.error()) {
+  <p class="loading">Opening your wallet…</p>
+}
