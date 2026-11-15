@@ -1,0 +1,14 @@
+# Backend
+backend/target/
+backend/data/
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/test-results/
+frontend/playwright-report/
+# Misc
+.idea/
+.vscode/
+*.iml
+.env
