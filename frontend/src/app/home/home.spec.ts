@@ -6,13 +6,14 @@ import { game, gamesList, settle } from '../testing';
 import { Home } from './home';
 
 describe('Home', () => {
-  let api: { wallet: ReturnType<typeof vi.fn>; createList: ReturnType<typeof vi.fn>; searchGames: ReturnType<typeof vi.fn> };
+  let api: { wallet: ReturnType<typeof vi.fn>; createList: ReturnType<typeof vi.fn>; searchGames: ReturnType<typeof vi.fn>; shares: ReturnType<typeof vi.fn> };
 
   async function render(wallet: Wallet) {
     api = {
       wallet: vi.fn().mockResolvedValue(wallet),
       createList: vi.fn(),
       searchGames: vi.fn(),
+      shares: vi.fn().mockResolvedValue([]),
     };
     TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: Api, useValue: api }] });
     const fixture = TestBed.createComponent(Home);

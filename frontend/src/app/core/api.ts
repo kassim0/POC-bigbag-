@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { Game, GameSearchResult, GamesList, Wallet } from './models';
+import { Game, GameSearchResult, GamesList, ShareLink, SharedView, Wallet } from './models';
 
 /** Typed access to the BingBang backend. */
 @Injectable({ providedIn: 'root' })
@@ -70,5 +70,23 @@ export class Api {
 
   logout(): Promise<void> {
     return firstValueFrom(this.http.post<void>('/api/auth/logout', null));
+  }
+
+  /** No list id = a link to the whole wallet. */
+  createShare(listIds: number[]): Promise<ShareLink> {
+    return firstValueFrom(this.http.post<ShareLink>('/api/shares', { listIds }));
+  }
+
+  shares(): Promise<ShareLink[]> {
+    return firstValueFrom(this.http.get<ShareLink[]>('/api/shares'));
+  }
+
+  revokeShare(shareId: string): Promise<void> {
+    return firstValueFrom(this.http.delete<void>(`/api/shares/${encodeURIComponent(shareId)}`));
+  }
+
+  /** Public: needs no wallet token. */
+  sharedView(shareId: string): Promise<SharedView> {
+    return firstValueFrom(this.http.get<SharedView>(`/api/shared/${encodeURIComponent(shareId)}`));
   }
 }

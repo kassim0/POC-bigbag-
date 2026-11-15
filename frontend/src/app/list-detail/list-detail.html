@@ -71,6 +71,8 @@
     <app-game-search [excluded]="gameIds()" (picked)="add($event)" />
   </section>
 
+  <app-share-panel class="card" [onlyList]="list.id" />
+
   <section class="card danger-zone">
     @if (confirmingDelete()) {
       <p>Delete “{{ title() }}” and its commentaries for good?</p>

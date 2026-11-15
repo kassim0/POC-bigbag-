@@ -1,0 +1,54 @@
+@if (view(); as view) {
+  <header class="hero">
+    <h1>{{ view.wholeWallet ? 'A shared games wallet' : 'Shared games lists' }}</h1>
+    <p><span class="badge">Read-only</span> Someone shared this with you. You can look around, not change it.</p>
+  </header>
+
+  @if (opened(); as list) {
+    <button type="button" class="back-button" (click)="openedId.set(null)">← All shared lists</button>
+    <section class="card detail">
+      <h2 class="shared-title">{{ title(list) }}</h2>
+      <p class="muted">{{ list.games.length }} {{ list.games.length === 1 ? 'game' : 'games' }}</p>
+      <ul class="games">
+        @for (game of list.games; track game.rawgId) {
+          <li class="game">
+            <app-game-cover [game]="game" />
+            <div class="grow">
+              <h3>{{ game.name }}</h3>
+              @if (game.released) {
+                <p class="muted">Released {{ game.released }}</p>
+              }
+            </div>
+            @if (game.comment) {
+              <blockquote class="comment">{{ game.comment }}</blockquote>
+            }
+          </li>
+        } @empty {
+          <li class="muted">This list has no game yet.</li>
+        }
+      </ul>
+    </section>
+  } @else {
+    <section class="grid" aria-label="Shared games lists">
+      @for (list of view.lists; track list.id) {
+        <button type="button" class="card list-card" (click)="openedId.set(list.id)">
+          <app-list-card [list]="list" />
+        </button>
+      } @empty {
+        <p class="card">This wallet has no games list yet.</p>
+      }
+    </section>
+  }
+} @else if (failure() === 'gone') {
+  <section class="card">
+    <h1>This share link does not exist</h1>
+    <p class="muted">It may have been revoked by its owner.</p>
+  </section>
+} @else if (failure() === 'error') {
+  <section class="card">
+    <h1>The shared wallet could not be loaded</h1>
+    <p class="muted">Please try again in a moment.</p>
+  </section>
+} @else {
+  <p class="loading">Opening the shared wallet…</p>
+}

@@ -14,10 +14,12 @@ describe('ListDetail', () => {
     deleteComment: vi.fn(),
     transferComment: vi.fn(),
     searchGames: vi.fn(),
+    shares: vi.fn(),
   };
 
   async function render(id: string) {
     vi.resetAllMocks();
+    api.shares.mockResolvedValue([]);
     api.wallet.mockResolvedValue({
       id: 'w',
       background: 'cozy', username: null,

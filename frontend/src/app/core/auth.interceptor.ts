@@ -5,7 +5,8 @@ import { SessionService } from './session';
 
 /** Adds the wallet token to API calls; if the server no longer knows it, starts over as a new guest. */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  if (!req.url.startsWith('/api/')) {
+  // Share links are public: a visitor must not get a guest wallet just for looking.
+  if (!req.url.startsWith('/api/') || req.url.startsWith('/api/shared/')) {
     return next(req);
   }
   const session = inject(SessionService);

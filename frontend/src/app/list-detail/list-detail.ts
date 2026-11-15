@@ -4,11 +4,12 @@ import { Game, GamesList, listTitle } from '../core/models';
 import { WalletStore } from '../core/wallet-store';
 import { GameCover } from '../shared/game-cover';
 import { GameSearch } from '../shared/game-search';
+import { SharePanel } from '../shared/share-panel';
 
 /** Detail of a GamesList: rename it, add or remove games, comment them, delete it. */
 @Component({
   selector: 'app-list-detail',
-  imports: [RouterLink, GameCover, GameSearch],
+  imports: [RouterLink, GameCover, GameSearch, SharePanel],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './list-detail.html',
 })

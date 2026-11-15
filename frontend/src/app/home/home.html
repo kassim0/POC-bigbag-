@@ -20,7 +20,14 @@
         </button>
       }
     </div>
+    <button type="button" class="small" [attr.aria-expanded]="sharing()" (click)="sharing.set(!sharing())">
+      Share
+    </button>
   </section>
+
+  @if (sharing()) {
+    <app-share-panel class="card" />
+  }
 
   <section class="grid" aria-label="Games lists">
     @for (list of wallet.lists; track list.id) {

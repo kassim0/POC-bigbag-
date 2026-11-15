@@ -4,11 +4,12 @@ import { BACKGROUNDS, Game } from '../core/models';
 import { WalletStore } from '../core/wallet-store';
 import { GameSearch } from '../shared/game-search';
 import { ListCard } from '../shared/list-card';
+import { SharePanel } from '../shared/share-panel';
 
 /** Home: the user's gamesWallet, with every GamesList and its 3 first games. */
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, ListCard, GameSearch],
+  imports: [RouterLink, ListCard, GameSearch, SharePanel],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './home.html',
 })
@@ -16,6 +17,7 @@ export class Home {
   protected readonly store = inject(WalletStore);
   protected readonly backgrounds = BACKGROUNDS;
 
+  protected readonly sharing = signal(false);
   protected readonly newName = signal('');
   protected readonly newGames = signal<Game[]>([]);
   protected readonly newGameIds = computed(() => this.newGames().map((g) => g.rawgId));

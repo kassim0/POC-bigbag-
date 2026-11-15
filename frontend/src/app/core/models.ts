@@ -21,6 +21,21 @@ export interface Wallet {
   lists: GamesList[];
 }
 
+/** A read-only link created by the owner of a wallet. */
+export interface ShareLink {
+  id: string;
+  wholeWallet: boolean;
+  listIds: number[];
+  createdAt: string;
+}
+
+/** What a visitor of a share link gets. */
+export interface SharedView {
+  wholeWallet: boolean;
+  background: string;
+  lists: GamesList[];
+}
+
 export interface GameSearchResult {
   count: number;
   page: number;

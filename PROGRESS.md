@@ -13,7 +13,9 @@ Stack : backend Spring Boot 3.5 / Java 21 (`backend/`), frontend Angular (`front
 | 4 | Mode invité persistant | ✅ fait |
 | 5 | Commentaires par jeu et par liste | ✅ fait |
 | 6 | Compte utilisateur | ✅ fait |
-| 7 | Partage en lecture seule par lien | ⏳ en cours |
+| 7 | Partage en lecture seule par lien | ✅ fait |
+
+**Périmètre V0.1 du wiki terminé** (branche `claude/bingbang-v0.1`). Voir « Reste à faire / pistes » en bas.
 
 ## Choix techniques
 
@@ -62,6 +64,18 @@ Stack : backend Spring Boot 3.5 / Java 21 (`backend/`), frontend Angular (`front
     redevient visible (changements faits depuis un autre appareil).
   - Hors périmètre V0.1 : changement/réinitialisation de mot de passe, suppression de compte, limitation
     des tentatives de connexion, expiration des sessions.
+- **Partage** (`share/`) : `ShareLink` = identifiant aléatoire non devinable (256 bits) + wallet + liste d'ids.
+  Sans ids → tout le wallet ; un id → une liste ; plusieurs → sélection.
+  - Propriétaire : `POST /api/shares {listIds}`, `GET /api/shares`, `DELETE /api/shares/{id}` (révocation).
+  - Visiteur : `GET /api/shared/{id}`, **seul** endpoint accessible par le lien, public et en lecture seule
+    (l'id de partage n'est pas un jeton de wallet). La vue est *vivante* (état courant du wallet), contient
+    le fond et les commentaires, mais ni l'id du wallet ni le nom du compte.
+  - Une liste supprimée sort des liens ; un lien dont toutes les listes ont disparu répond 404.
+  - À la connexion depuis un appareil invité : les liens vers des listes suivent les listes ; un lien
+    « tout le wallet invité » est supprimé (il n'exposera pas tout le wallet du compte par surprise).
+  - Front : `shared/share-panel` (accueil : tout le wallet ou sélection ; détail : cette liste ; copier,
+    révoquer) et route publique `/shared/:shareId` (`shared-view/`), sans aucun contrôle d'édition.
+    L'intercepteur n'ajoute pas de jeton sur `/api/shared/` : un visiteur ne crée pas de wallet.
 - **E2E** : `frontend/e2e/e2e.mjs` (Playwright installé globalement, pas une dépendance du projet) +
   `frontend/e2e/fake-rawg.mjs` (faux RAWG local, donc ni clé ni réseau).
 
@@ -77,3 +91,13 @@ Stack : backend Spring Boot 3.5 / Java 21 (`backend/`), frontend Angular (`front
 - RAWG n'accepte la clé qu'en paramètre d'URL `key=`. Dans la session cloud, le secret réseau enregistré pour
   `api.rawg.io` est injecté en en-tête HTTP par le proxy : il ne peut donc pas servir à un appel réel.
   L'intégration RAWG est couverte par des tests avec serveur HTTP simulé ; à valider en local avec une vraie clé.
+
+## Reste à faire / pistes (hors périmètre V0.1)
+
+- Valider la recherche avec une vraie clé RAWG (`RAWG_API_KEY`) : non testable dans la session cloud (voir ci-dessus).
+- Déploiement : servir `frontend/dist` avec un fallback SPA vers `index.html` (liens `/shared/...`, `/lists/...`)
+  et router `/api` vers le backend ; passer H2 à une vraie base (PostgreSQL) + migrations (Flyway).
+- Compte : changement/réinitialisation de mot de passe, suppression, limitation des tentatives, expiration des sessions.
+- Fond « personnel » : aujourd'hui 6 fonds prédéfinis ; image personnalisée possible plus tard.
+- Réordonner les jeux/les listes (l'accueil montre les 3 premiers jeux dans l'ordre d'ajout).
+- Page wiki « Future-ideas » volontairement ignorée.

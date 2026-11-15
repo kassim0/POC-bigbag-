@@ -421,3 +421,85 @@ button.icon {
 .account form button {
   margin-top: 12px;
 }
+
+app-share-panel {
+  margin-bottom: 16px;
+}
+
+app-share-panel > button {
+  margin-top: 12px;
+}
+
+.share-scope {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.share-scope input,
+.share-lists input {
+  width: auto;
+}
+
+.share-lists {
+  display: grid;
+  gap: 6px;
+  padding-left: 24px;
+}
+
+.share-links {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.share-links li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: end;
+}
+
+.share-links .grow {
+  display: grid;
+  gap: 4px;
+  flex-basis: 260px;
+}
+
+button.list-card {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+}
+
+.back-button {
+  margin: 0 0 16px;
+  background: rgb(255 250 241 / 88%);
+  color: var(--ink);
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 0.85rem;
+  text-shadow: none;
+}
+
+blockquote.comment {
+  margin: 0;
+  padding: 8px 12px;
+  border-left: 4px solid var(--accent);
+  background: var(--paper-soft);
+  border-radius: 0 8px 8px 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.shared-title {
+  font-size: 1.6rem;
+}

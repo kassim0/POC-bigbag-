@@ -145,6 +145,74 @@ async function account(page) {
   step('the first device sees what was added from the other one');
 }
 
+async function sharing(page) {
+  const shareUrl = async (label) => page.getByLabel(`Share link: ${label}`).inputValue();
+  await page.goto(BASE);
+  await page.getByRole('button', { name: 'Share', exact: true }).click();
+  await page.getByRole('button', { name: 'Create a share link' }).click();
+  const walletUrl = await shareUrl('My whole wallet');
+  await page.getByLabel('Only the lists I select').check();
+  await page.getByLabel('Games I loved', { exact: true }).check();
+  await page.getByLabel('Made on my phone', { exact: true }).check();
+  await page.getByRole('button', { name: 'Create a share link' }).click();
+  const selectionUrl = await shareUrl('Games I loved, Made on my phone');
+  await shot(page, 'share-panel');
+  await page.locator('.list-card', { hasText: 'To replay' }).click();
+  await page.getByRole('button', { name: 'Create a share link' }).click();
+  const listUrl = await shareUrl('To replay');
+  step('create links: whole wallet, a selection of lists, a single list');
+
+  // A visitor: another browser, no wallet token at all.
+  const other = await chromium.launch();
+  try {
+    const visitor = await other.newPage();
+    const apiCalls = [];
+    visitor.on('request', (r) => r.url().includes('/api/') && apiCalls.push(`${r.method()} ${new URL(r.url()).pathname}`));
+    const titles = () => visitor.locator('.list-card h2').allTextContents();
+
+    await visitor.goto(walletUrl);
+    await visitor.locator('.list-card').first().waitFor();
+    assert.deepEqual(await titles(), ['Games I loved', 'To replay', 'Made on my phone']);
+    assert.deepEqual(
+      await visitor.locator('.list-card').first().locator('.preview li > span').allTextContents(),
+      ['Celeste', 'Outer Wilds', 'Portal 2'],
+    );
+    await shot(visitor, 'shared-wallet');
+    await visitor.locator('.list-card', { hasText: 'Games I loved' }).click();
+    await visitor.locator('blockquote', { hasText: 'Best roguelike ever' }).waitFor();
+    assert.equal(await visitor.locator('input, textarea, form').count(), 0);
+    assert.deepEqual(await visitor.getByRole('button').allTextContents(), ['← All shared lists']);
+    await shot(visitor, 'shared-list');
+    step('visitor sees the whole wallet, read-only, with nothing to edit');
+
+    await visitor.goto(selectionUrl);
+    await visitor.locator('.list-card').first().waitFor();
+    assert.deepEqual(await titles(), ['Games I loved', 'Made on my phone']);
+    await visitor.goto(listUrl);
+    await visitor.locator('.list-card').first().waitFor();
+    assert.deepEqual(await titles(), ['To replay']);
+    step('visitor sees only the selected lists / the single list');
+
+    assert.ok(apiCalls.length > 0 && apiCalls.every((c) => c.startsWith('GET /api/shared/')), apiCalls.join(', '));
+    assert.equal(await visitor.evaluate(() => localStorage.getItem('bingbang.token')), null);
+    step('visiting a share link makes only public read calls and creates no wallet');
+
+    // Live: the owner renames a list; revoking kills the link.
+    await page.locator('.title-input').fill('Replay someday');
+    await page.locator('.title-input').press('Enter');
+    await page.getByLabel('Share link: Replay someday').waitFor();
+    await visitor.reload();
+    await visitor.locator('.list-card h2', { hasText: 'Replay someday' }).waitFor();
+    await page.getByRole('button', { name: 'Revoke' }).click();
+    await page.getByLabel('Share link: Replay someday').waitFor({ state: 'detached' });
+    await visitor.reload();
+    await visitor.getByRole('heading', { name: 'This share link does not exist' }).waitFor();
+    step('shared view is live; a revoked link stops working');
+  } finally {
+    await other.close();
+  }
+}
+
 async function reopenBrowser(profile) {
   // Same profile directory = same browser storage, as when a user closes then reopens their browser.
   const browser = await chromium.launchPersistentContext(profile);
@@ -167,6 +235,7 @@ try {
 
   await comments(page);
   await account(page);
+  await sharing(page);
 } finally {
   await browser.close();
 }

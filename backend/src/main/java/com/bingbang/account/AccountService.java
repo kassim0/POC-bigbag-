@@ -16,6 +16,8 @@ import com.bingbang.session.AccessTokenRepository;
 import com.bingbang.session.Session;
 import com.bingbang.session.SessionService;
 import com.bingbang.session.SessionService.IssuedToken;
+import com.bingbang.share.ShareLink;
+import com.bingbang.share.ShareLinkRepository;
 import com.bingbang.wallet.GamesList;
 import com.bingbang.wallet.GamesListRepository;
 import com.bingbang.wallet.WalletRepository;
@@ -33,9 +35,11 @@ public class AccountService {
     private final SessionService sessions;
     private final GamesListRepository lists;
     private final WalletRepository wallets;
+    private final ShareLinkRepository shares;
 
     public AccountService(UserAccountRepository users, AccessTokenRepository tokens, SessionService sessions,
-                          GamesListRepository lists, WalletRepository wallets) {
+                          GamesListRepository lists, WalletRepository wallets, ShareLinkRepository shares) {
+        this.shares = shares;
         this.users = users;
         this.tokens = tokens;
         this.sessions = sessions;
@@ -83,6 +87,15 @@ public class AccountService {
                     list.setWallet(wallets.getReferenceById(user.getWalletId()));
                 }
                 lists.flush();
+                // Links to selected lists follow them; a link to "the whole guest wallet" must not
+                // silently start exposing the whole account wallet, so it is dropped.
+                for (ShareLink link : shares.findByWalletIdOrderByCreatedAtAsc(session.walletId())) {
+                    if (link.isWholeWallet()) {
+                        shares.delete(link);
+                    } else {
+                        link.setWalletId(user.getWalletId());
+                    }
+                }
                 wallets.deleteById(session.walletId());
             }
             tokens.deleteById(session.tokenHash());
