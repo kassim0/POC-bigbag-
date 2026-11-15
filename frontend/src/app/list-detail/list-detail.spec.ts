@@ -20,7 +20,7 @@ describe('ListDetail', () => {
     vi.resetAllMocks();
     api.wallet.mockResolvedValue({
       id: 'w',
-      background: 'cozy',
+      background: 'cozy', username: null,
       lists: [
         gamesList(1, 'Liked', { ...game(1, 'Hades'), comment: 'Loved it' }, game(2, 'Celeste')),
         gamesList(2, 'To replay', game(1, 'Hades')),

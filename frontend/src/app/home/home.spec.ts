@@ -24,7 +24,7 @@ describe('Home', () => {
   it('shows every list with only its 3 first games', async () => {
     const { page } = await render({
       id: 'w',
-      background: 'cozy',
+      background: 'cozy', username: null,
       lists: [
         gamesList(1, 'Liked', game(1, 'Hades'), game(2, 'Celeste'), game(3, 'Tunic'), game(4, 'Outer Wilds'), game(5)),
         gamesList(2, '', game(9, 'Portal')),
@@ -46,7 +46,7 @@ describe('Home', () => {
   });
 
   it('creates a list from a name and shows it', async () => {
-    const { fixture, page } = await render({ id: 'w', background: 'cozy', lists: [] });
+    const { fixture, page } = await render({ id: 'w', background: 'cozy', username: null, lists: [] });
     const submit = page.querySelector<HTMLButtonElement>('.new-list button[type=submit]')!;
     expect(submit.disabled).toBe(true); // a list needs a name or games
 
@@ -67,7 +67,7 @@ describe('Home', () => {
   });
 
   it('creates a list from picked games only', async () => {
-    const { fixture, page } = await render({ id: 'w', background: 'cozy', lists: [] });
+    const { fixture, page } = await render({ id: 'w', background: 'cozy', username: null, lists: [] });
     api.searchGames.mockResolvedValue({ count: 1, page: 1, hasNext: false, results: [game(3, 'Hades')] });
     const search = page.querySelector<HTMLInputElement>('app-game-search input')!;
     search.value = 'hades';

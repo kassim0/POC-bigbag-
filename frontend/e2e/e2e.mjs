@@ -97,6 +97,54 @@ async function comments(page) {
   step('a commentary can be deleted');
 }
 
+async function account(page) {
+  const username = `e2e_${Date.now()}`;
+  await page.goto(BASE);
+  await page.getByRole('link', { name: 'Create account / Log in' }).click();
+  await page.getByLabel('Username').fill(username);
+  await page.getByLabel(/^Password/).fill('correct horse');
+  await page.getByRole('button', { name: 'Create my account' }).click();
+  await page.getByRole('link', { name: username }).waitFor();
+  await page.locator('.list-card', { hasText: 'Games I loved' }).waitFor();
+  step('create an account: the guest wallet becomes the account wallet');
+
+  // Another device: a brand new browser profile, with a list made as a guest before logging in.
+  const other = await chromium.launch();
+  try {
+    const phone = await other.newPage();
+    await phone.goto(BASE);
+    await phone.getByPlaceholder('Games I liked, To play…').fill('Made on my phone');
+    await phone.getByRole('button', { name: 'Create list' }).click();
+    await phone.locator('.list-card', { hasText: 'Made on my phone' }).waitFor();
+    await phone.getByRole('link', { name: 'Create account / Log in' }).click();
+    await phone.getByRole('button', { name: 'I already have one' }).click();
+    await phone.getByLabel('Username').fill(username);
+    await phone.getByLabel(/^Password/).fill('wrong password');
+    await phone.getByRole('button', { name: 'Log in', exact: true }).click();
+    await phone.getByRole('alert').filter({ hasText: 'Wrong username or password' }).waitFor();
+    await phone.getByLabel(/^Password/).fill('correct horse');
+    await phone.getByRole('button', { name: 'Log in', exact: true }).click();
+    await phone.locator('.list-card', { hasText: 'Games I loved' }).waitFor();
+    await phone.locator('.list-card', { hasText: 'Made on my phone' }).waitFor();
+    await shot(phone, 'account-other-device');
+    step('log in on another device: same wallet, plus the lists made there as a guest');
+
+    await phone.getByRole('link', { name: username }).click();
+    await phone.getByRole('button', { name: 'Log out' }).click();
+    await phone.getByRole('heading', { name: 'Create an account' }).waitFor();
+    await phone.goto(BASE);
+    await phone.getByRole('link', { name: 'Create account / Log in' }).waitFor();
+    assert.equal(await phone.locator('.list-card').count(), 0);
+    step('log out: back to an empty guest wallet');
+  } finally {
+    await other.close();
+  }
+
+  await page.reload();
+  await page.locator('.list-card', { hasText: 'Made on my phone' }).waitFor();
+  step('the first device sees what was added from the other one');
+}
+
 async function reopenBrowser(profile) {
   // Same profile directory = same browser storage, as when a user closes then reopens their browser.
   const browser = await chromium.launchPersistentContext(profile);
@@ -118,6 +166,7 @@ try {
   step('guest wallet is still there after closing and reopening the browser');
 
   await comments(page);
+  await account(page);
 } finally {
   await browser.close();
 }

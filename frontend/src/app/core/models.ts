@@ -16,6 +16,8 @@ export interface GamesList {
 export interface Wallet {
   id: string;
   background: string;
+  /** Account that owns the wallet; null for a guest wallet. */
+  username: string | null;
   lists: GamesList[];
 }
 

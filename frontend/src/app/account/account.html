@@ -1,0 +1,70 @@
+<a class="back" routerLink="/">← My games wallet</a>
+
+@if (store.wallet(); as wallet) {
+  @if (wallet.username; as username) {
+    <section class="card account">
+      <h1>Hello, {{ username }}</h1>
+      <p>Your games wallet follows you: log in on any device with a browser to find it.</p>
+      <p class="muted">Logging out here leaves your wallet untouched on your account.</p>
+      <button type="button" class="ghost" [disabled]="busy()" (click)="logout()">Log out</button>
+    </section>
+  } @else {
+    <section class="card account">
+      <h1>{{ mode() === 'register' ? 'Create an account' : 'Log in' }}</h1>
+      <p class="notice">
+        You do not need an account: your wallet is already kept on this device, even if you close the
+        browser. With an account, you find it on <strong>every device</strong>.
+      </p>
+
+      <div class="row tabs" role="group" aria-label="Account action">
+        <button
+          type="button"
+          class="small"
+          [class.ghost]="mode() !== 'register'"
+          [attr.aria-pressed]="mode() === 'register'"
+          (click)="mode.set('register')"
+        >
+          Create an account
+        </button>
+        <button
+          type="button"
+          class="small"
+          [class.ghost]="mode() !== 'login'"
+          [attr.aria-pressed]="mode() === 'login'"
+          (click)="mode.set('login')"
+        >
+          I already have one
+        </button>
+      </div>
+
+      <form (submit)="submit($event, username.value, password.value)">
+        <label class="field">
+          <span>Username</span>
+          <input #username name="username" autocomplete="username" required minlength="3" maxlength="30" />
+        </label>
+        <label class="field">
+          <span>Password{{ mode() === 'register' ? ' (8 characters or more)' : '' }}</span>
+          <input
+            #password
+            name="password"
+            type="password"
+            required
+            [attr.minlength]="mode() === 'register' ? 8 : null"
+            maxlength="72"
+            [attr.autocomplete]="mode() === 'register' ? 'new-password' : 'current-password'"
+          />
+        </label>
+        @if (mode() === 'register') {
+          <p class="muted hint">Your current wallet ({{ wallet.lists.length }} lists) becomes the wallet of the account.</p>
+        } @else if (wallet.lists.length) {
+          <p class="muted hint">The {{ wallet.lists.length }} lists of this device will be added to your account.</p>
+        }
+        <button type="submit" [disabled]="busy()">
+          {{ mode() === 'register' ? 'Create my account' : 'Log in' }}
+        </button>
+      </form>
+    </section>
+  }
+} @else if (!store.error()) {
+  <p class="loading">Opening your wallet…</p>
+}

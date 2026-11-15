@@ -56,4 +56,19 @@ export class Api {
       this.http.post<GamesList>(`/api/lists/${listId}/games/${rawgId}/comment/transfer`, { targetListId }),
     );
   }
+
+  /** Turns the current guest wallet into the wallet of a new account. */
+  register(username: string, password: string): Promise<{ username: string }> {
+    return firstValueFrom(this.http.post<{ username: string }>('/api/auth/register', { username, password }));
+  }
+
+  login(username: string, password: string): Promise<{ token: string; username: string }> {
+    return firstValueFrom(
+      this.http.post<{ token: string; username: string }>('/api/auth/login', { username, password }),
+    );
+  }
+
+  logout(): Promise<void> {
+    return firstValueFrom(this.http.post<void>('/api/auth/logout', null));
+  }
 }

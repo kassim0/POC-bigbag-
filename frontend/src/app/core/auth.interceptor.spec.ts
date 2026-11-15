@@ -63,4 +63,17 @@ describe('authInterceptor', () => {
     }
     expect(status).toBe(401);
   });
+
+  it('does not retry a failed login: 401 means wrong credentials', async () => {
+    localStorage.setItem('bingbang.token', 'guest-1');
+    let status = 0;
+    http.post('/api/auth/login', {}).subscribe({ error: (e) => (status = e.status) });
+    await settle();
+    const login = server.expectOne('/api/auth/login');
+    expect(login.request.headers.get('Authorization')).toBe('Bearer guest-1');
+    login.flush({ error: 'Wrong username or password' }, { status: 401, statusText: 'Unauthorized' });
+    await settle();
+    expect(status).toBe(401);
+    expect(localStorage.getItem('bingbang.token')).toBe('guest-1');
+  });
 });

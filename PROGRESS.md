@@ -12,8 +12,8 @@ Stack : backend Spring Boot 3.5 / Java 21 (`backend/`), frontend Angular (`front
 | 3 | Frontend : accueil (3 premiers jeux par liste), détail/édition | ✅ fait |
 | 4 | Mode invité persistant | ✅ fait |
 | 5 | Commentaires par jeu et par liste | ✅ fait |
-| 6 | Compte utilisateur | ⏳ en cours |
-| 7 | Partage en lecture seule par lien | à faire |
+| 6 | Compte utilisateur | ✅ fait |
+| 7 | Partage en lecture seule par lien | ⏳ en cours |
 
 ## Choix techniques
 
@@ -51,6 +51,17 @@ Stack : backend Spring Boot 3.5 / Java 21 (`backend/`), frontend Angular (`front
   `POST …/comment/transfer {targetListId}`. **Choix** : « transférer » = *copier* vers une autre liste du
   wallet qui contient le même jeu (la source garde son commentaire, celui de la cible est remplacé).
   Le commentaire est renvoyé dans `GameDto.comment`.
+- **Compte** (`account/`) : identifiant (3–30 caractères, insensible à la casse) + mot de passe (8–72, BCrypt
+  via `spring-security-crypto` ; pas de Spring Security complet). Le compte reste facultatif.
+  - `POST /api/auth/register` : le wallet invité courant **devient** le wallet du compte (rien n'est perdu),
+    le jeton courant devient une session du compte.
+  - `POST /api/auth/login` : nouveau jeton sur le wallet du compte. **Choix** : si l'appareil avait un wallet
+    invité, ses listes sont *déplacées* dans le wallet du compte (puis wallet/jeton invité supprimés).
+  - `POST /api/auth/logout` : supprime la session de cet appareil ; le front repart sur un wallet invité vide.
+  - `GET /api/wallet` renvoie `username` (null pour un invité). Le front recharge le wallet quand l'onglet
+    redevient visible (changements faits depuis un autre appareil).
+  - Hors périmètre V0.1 : changement/réinitialisation de mot de passe, suppression de compte, limitation
+    des tentatives de connexion, expiration des sessions.
 - **E2E** : `frontend/e2e/e2e.mjs` (Playwright installé globalement, pas une dépendance du projet) +
   `frontend/e2e/fake-rawg.mjs` (faux RAWG local, donc ni clé ni réseau).
 

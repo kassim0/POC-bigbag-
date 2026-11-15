@@ -22,5 +22,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         ),
       ),
     );
-  return send(true);
+  // A 401 on login means wrong credentials, not an unknown token.
+  return send(req.url !== '/api/auth/login');
 };

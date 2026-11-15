@@ -411,3 +411,13 @@ button.icon {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+.account {
+  max-width: 520px;
+  display: grid;
+  gap: 12px;
+}
+
+.account form button {
+  margin-top: 12px;
+}

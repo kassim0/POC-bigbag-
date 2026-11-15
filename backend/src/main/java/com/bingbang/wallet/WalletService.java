@@ -6,6 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bingbang.account.UserAccount;
+import com.bingbang.account.UserAccountRepository;
 import com.bingbang.common.ApiException;
 import com.bingbang.wallet.Dtos.CreateListRequest;
 import com.bingbang.wallet.Dtos.GameDto;
@@ -20,15 +22,19 @@ public class WalletService {
     private final WalletRepository wallets;
     private final GamesListRepository lists;
 
-    public WalletService(WalletRepository wallets, GamesListRepository lists) {
+    private final UserAccountRepository users;
+
+    public WalletService(WalletRepository wallets, GamesListRepository lists, UserAccountRepository users) {
         this.wallets = wallets;
         this.lists = lists;
+        this.users = users;
     }
 
     @Transactional(readOnly = true)
     public WalletDto getWallet(String walletId) {
         Wallet wallet = wallet(walletId);
-        return new WalletDto(wallet.getId(), wallet.getBackground(), getLists(walletId));
+        String username = users.findByWalletId(walletId).map(UserAccount::getUsername).orElse(null);
+        return new WalletDto(wallet.getId(), wallet.getBackground(), username, getLists(walletId));
     }
 
     public WalletDto setBackground(String walletId, String background) {

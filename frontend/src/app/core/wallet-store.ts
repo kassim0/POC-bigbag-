@@ -2,11 +2,13 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Api } from './api';
 import { errorMessage } from './errors';
 import { Game, GamesList, Wallet } from './models';
+import { SessionService } from './session';
 
 /** The user's wallet, shared by the pages. Failed actions end up in `error`. */
 @Injectable({ providedIn: 'root' })
 export class WalletStore {
   private readonly api = inject(Api);
+  private readonly session = inject(SessionService);
   private loading: Promise<void> | null = null;
 
   readonly wallet = signal<Wallet | null>(null);
@@ -65,6 +67,32 @@ export class WalletStore {
 
   transferComment(listId: number, rawgId: number, targetListId: number): Promise<boolean> {
     return this.attempt(async () => this.replace(await this.api.transferComment(listId, rawgId, targetListId)));
+  }
+
+  /** Creates an account that takes over the current (guest) wallet. */
+  register(username: string, password: string): Promise<boolean> {
+    return this.attempt(async () => {
+      const account = await this.api.register(username, password);
+      this.wallet.update((wallet) => (wallet ? { ...wallet, username: account.username } : wallet));
+    });
+  }
+
+  /** Switches to the wallet of an account; the guest lists of this device are moved into it. */
+  login(username: string, password: string): Promise<boolean> {
+    return this.attempt(async () => {
+      const { token } = await this.api.login(username, password);
+      this.session.use(token);
+      this.wallet.set(await this.api.wallet());
+    });
+  }
+
+  /** Ends the login session of this device and goes back to a new, empty guest wallet. */
+  logout(): Promise<boolean> {
+    return this.attempt(async () => {
+      await this.api.logout();
+      this.session.clear();
+      this.wallet.set(await this.api.wallet());
+    });
   }
 
   /** Runs an action; on failure, publishes the message and returns false. */

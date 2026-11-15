@@ -41,6 +41,7 @@ public final class Dtos {
     public record GamesListDto(long id, String name, List<GameDto> games) {
     }
 
-    public record WalletDto(String id, String background, List<GamesListDto> lists) {
+    /** username: the account that owns the wallet, null for a guest wallet. */
+    public record WalletDto(String id, String background, String username, List<GamesListDto> lists) {
     }
 }
