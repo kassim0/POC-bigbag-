@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -15,10 +16,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.bingbang.session.Session;
 import com.bingbang.wallet.Dtos.BackgroundRequest;
+import com.bingbang.wallet.Dtos.CommentRequest;
 import com.bingbang.wallet.Dtos.CreateListRequest;
 import com.bingbang.wallet.Dtos.GameRequest;
 import com.bingbang.wallet.Dtos.GamesListDto;
 import com.bingbang.wallet.Dtos.RenameListRequest;
+import com.bingbang.wallet.Dtos.TransferCommentRequest;
 import com.bingbang.wallet.Dtos.WalletDto;
 
 import jakarta.validation.Valid;
@@ -81,5 +84,23 @@ public class WalletController {
     @DeleteMapping("/lists/{listId}/games/{rawgId}")
     public GamesListDto removeGame(Session session, @PathVariable long listId, @PathVariable long rawgId) {
         return service.removeGame(session.walletId(), listId, rawgId);
+    }
+
+    @PutMapping("/lists/{listId}/games/{rawgId}/comment")
+    public GamesListDto setComment(Session session, @PathVariable long listId, @PathVariable long rawgId,
+                                   @Valid @RequestBody CommentRequest request) {
+        return service.setComment(session.walletId(), listId, rawgId, request.text());
+    }
+
+    @DeleteMapping("/lists/{listId}/games/{rawgId}/comment")
+    public GamesListDto deleteComment(Session session, @PathVariable long listId, @PathVariable long rawgId) {
+        return service.deleteComment(session.walletId(), listId, rawgId);
+    }
+
+    /** Copies the commentary to the same game in another list; returns that other list. */
+    @PostMapping("/lists/{listId}/games/{rawgId}/comment/transfer")
+    public GamesListDto transferComment(Session session, @PathVariable long listId, @PathVariable long rawgId,
+                                        @Valid @RequestBody TransferCommentRequest request) {
+        return service.transferComment(session.walletId(), listId, rawgId, request.targetListId());
     }
 }

@@ -54,6 +54,49 @@ async function createListAndFillIt(page) {
   await shot(page, 'home');
 }
 
+async function comments(page) {
+  await page.goto(BASE);
+  await page.locator('.list-card', { hasText: 'Games I loved' }).click();
+  const hades = page.locator('.game', { hasText: 'Hades' }).first();
+  await hades.getByLabel('Commentary on Hades').fill('Best roguelike ever');
+  await hades.getByRole('button', { name: 'Save commentary' }).click();
+  await hades.getByRole('button', { name: 'Delete commentary' }).waitFor();
+
+  await page.getByRole('button', { name: 'Remove Hades', exact: true }).click();
+  await page.locator('.game h3', { hasText: /^Hades$/ }).waitFor({ state: 'detached' });
+  await addGame(page, 'hades', 'Hades');
+  const back = page.locator('.game', { has: page.locator('h3', { hasText: /^Hades$/ }) });
+  await back.waitFor();
+  assert.equal(await back.getByLabel('Commentary on Hades').inputValue(), 'Best roguelike ever');
+  step('a commentary survives removing the game and comes back when it is re-added');
+
+  // Same game in a second list: its own commentary, and the first one can be copied there.
+  await page.goto(BASE);
+  await page.getByPlaceholder('Search the RAWG catalogue…').fill('hades');
+  await page.locator('.results li', { hasText: 'Hades' }).first().getByRole('button', { name: 'Add' }).click();
+  await page.getByPlaceholder('Games I liked, To play…').fill('To replay');
+  await page.getByRole('button', { name: 'Create list' }).click();
+  await page.locator('.list-card', { hasText: 'To replay' }).click();
+  await page.waitForURL(/\/lists\/\d+$/);
+  assert.equal(await page.getByLabel('Commentary on Hades').inputValue(), '');
+  await page.getByRole('link', { name: '← My games wallet' }).click();
+  await page.locator('.list-card', { hasText: 'Games I loved' }).click();
+  await page.getByRole('button', { name: 'Copy to “To replay”' }).click();
+  await page.getByRole('status').waitFor();
+  await shot(page, 'comments');
+  await page.getByRole('link', { name: '← My games wallet' }).click();
+  await page.locator('.list-card', { hasText: 'To replay' }).click();
+  await page.waitForFunction(
+    () => document.querySelector('[aria-label="Commentary on Hades"]')?.value === 'Best roguelike ever',
+  );
+  step('a commentary is per list and can be copied to another list');
+
+  await page.getByRole('button', { name: 'Delete commentary' }).click();
+  await page.getByRole('button', { name: 'Delete commentary' }).waitFor({ state: 'detached' });
+  assert.equal(await page.getByLabel('Commentary on Hades').inputValue(), '');
+  step('a commentary can be deleted');
+}
+
 async function reopenBrowser(profile) {
   // Same profile directory = same browser storage, as when a user closes then reopens their browser.
   const browser = await chromium.launchPersistentContext(profile);
@@ -73,6 +116,8 @@ try {
   await card.waitFor();
   assert.deepEqual(await card.locator('.preview li > span').allTextContents(), ['Hades', 'Celeste', 'Outer Wilds']);
   step('guest wallet is still there after closing and reopening the browser');
+
+  await comments(page);
 } finally {
   await browser.close();
 }

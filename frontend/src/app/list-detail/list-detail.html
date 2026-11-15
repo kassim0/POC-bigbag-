@@ -32,6 +32,36 @@
           <button type="button" class="ghost small" [attr.aria-label]="'Remove ' + game.name" (click)="remove(game)">
             Remove
           </button>
+          <div class="comment">
+            <label class="field">
+              <span>Commentary</span>
+              <textarea
+                #comment
+                maxlength="2000"
+                placeholder="What did you think of it?"
+                [attr.aria-label]="'Commentary on ' + game.name"
+                [value]="game.comment ?? ''"
+              ></textarea>
+            </label>
+            <div class="row">
+              <button type="button" class="small" (click)="saveComment(game, comment)">Save commentary</button>
+              @if (game.comment) {
+                <button type="button" class="ghost small" (click)="deleteComment(game, comment)">
+                  Delete commentary
+                </button>
+                @for (other of otherListsWith(game); track other.id) {
+                  <button type="button" class="ghost small" (click)="transfer(game, other)">
+                    Copy to “{{ listTitle(other) }}”
+                  </button>
+                }
+              }
+              @if (transferred(); as done) {
+                @if (done.rawgId === game.rawgId) {
+                  <small class="muted" role="status">Commentary copied to “{{ done.to }}”.</small>
+                }
+              }
+            </div>
+          </div>
         </li>
       }
     </ul>
@@ -43,7 +73,7 @@
 
   <section class="card danger-zone">
     @if (confirmingDelete()) {
-      <p>Delete “{{ title() }}” for good?</p>
+      <p>Delete “{{ title() }}” and its commentaries for good?</p>
       <button type="button" class="danger" (click)="deleteList()">Yes, delete it</button>
       <button type="button" class="ghost" (click)="confirmingDelete.set(false)">Cancel</button>
     } @else {

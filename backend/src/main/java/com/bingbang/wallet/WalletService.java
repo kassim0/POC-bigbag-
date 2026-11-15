@@ -94,6 +94,51 @@ public class WalletService {
         return toDto(list);
     }
 
+    public GamesListDto setComment(String walletId, long listId, long rawgId, String text) {
+        GamesList list = listWithGame(walletId, listId, rawgId);
+        writeComment(list, rawgId, text.trim());
+        return toDto(list);
+    }
+
+    /** Deletes the commentary itself (removing the game does not). */
+    public GamesListDto deleteComment(String walletId, long listId, long rawgId) {
+        GamesList list = list(walletId, listId);
+        if (!list.getComments().removeIf(c -> c.getRawgId() == rawgId)) {
+            throw ApiException.notFound("This game has no commentary");
+        }
+        return toDto(list);
+    }
+
+    /**
+     * Copies the commentary of a game to another list of the wallet that contains the same game,
+     * replacing the commentary it may have there. Returns the target list.
+     */
+    public GamesListDto transferComment(String walletId, long listId, long rawgId, long targetListId) {
+        if (listId == targetListId) {
+            throw ApiException.badRequest("The commentary is already in this list");
+        }
+        String text = list(walletId, listId).commentOf(rawgId)
+                .orElseThrow(() -> ApiException.notFound("This game has no commentary"))
+                .getText();
+        GamesList target = listWithGame(walletId, targetListId, rawgId);
+        writeComment(target, rawgId, text);
+        return toDto(target);
+    }
+
+    private GamesList listWithGame(String walletId, long listId, long rawgId) {
+        GamesList list = list(walletId, listId);
+        if (!list.contains(rawgId)) {
+            throw ApiException.notFound("This game is not in the list");
+        }
+        return list;
+    }
+
+    private static void writeComment(GamesList list, long rawgId, String text) {
+        list.commentOf(rawgId).ifPresentOrElse(
+                c -> c.setText(text),
+                () -> list.getComments().add(new GameComment(list, rawgId, text)));
+    }
+
     private Wallet wallet(String walletId) {
         return wallets.findById(walletId).orElseThrow(() -> ApiException.notFound("Wallet not found"));
     }
@@ -109,7 +154,8 @@ public class WalletService {
 
     GamesListDto toDto(GamesList list) {
         List<GameDto> games = list.getGames().stream()
-                .map(g -> new GameDto(g.getRawgId(), g.getName(), g.getReleased(), g.getBackgroundImage()))
+                .map(g -> new GameDto(g.getRawgId(), g.getName(), g.getReleased(), g.getBackgroundImage(),
+                        list.commentOf(g.getRawgId()).map(GameComment::getText).orElse(null)))
                 .toList();
         return new GamesListDto(list.getId(), list.getName(), games);
     }

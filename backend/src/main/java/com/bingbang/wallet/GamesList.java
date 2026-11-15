@@ -3,6 +3,7 @@ package com.bingbang.wallet;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -39,6 +40,10 @@ public class GamesList {
     @OrderBy("id ASC")
     private List<GameEntry> games = new ArrayList<>();
 
+    /** Commentaries of this list, including those of games that were removed from it. */
+    @OneToMany(mappedBy = "list", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<GameComment> comments = new ArrayList<>();
+
     protected GamesList() {
     }
 
@@ -69,6 +74,14 @@ public class GamesList {
 
     public List<GameEntry> getGames() {
         return games;
+    }
+
+    public List<GameComment> getComments() {
+        return comments;
+    }
+
+    public Optional<GameComment> commentOf(long rawgId) {
+        return comments.stream().filter(c -> c.getRawgId() == rawgId).findFirst();
     }
 
     public boolean contains(long rawgId) {

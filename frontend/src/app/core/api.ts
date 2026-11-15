@@ -41,4 +41,19 @@ export class Api {
   removeGame(listId: number, rawgId: number): Promise<GamesList> {
     return firstValueFrom(this.http.delete<GamesList>(`/api/lists/${listId}/games/${rawgId}`));
   }
+
+  setComment(listId: number, rawgId: number, text: string): Promise<GamesList> {
+    return firstValueFrom(this.http.put<GamesList>(`/api/lists/${listId}/games/${rawgId}/comment`, { text }));
+  }
+
+  deleteComment(listId: number, rawgId: number): Promise<GamesList> {
+    return firstValueFrom(this.http.delete<GamesList>(`/api/lists/${listId}/games/${rawgId}/comment`));
+  }
+
+  /** Copies the commentary to the same game in another list; resolves with that other list. */
+  transferComment(listId: number, rawgId: number, targetListId: number): Promise<GamesList> {
+    return firstValueFrom(
+      this.http.post<GamesList>(`/api/lists/${listId}/games/${rawgId}/comment/transfer`, { targetListId }),
+    );
+  }
 }

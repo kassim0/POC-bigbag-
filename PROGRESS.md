@@ -11,8 +11,8 @@ Stack : backend Spring Boot 3.5 / Java 21 (`backend/`), frontend Angular (`front
 | 2 | CRUD GamesList (nom, ajout/retrait de jeux) | ✅ fait |
 | 3 | Frontend : accueil (3 premiers jeux par liste), détail/édition | ✅ fait |
 | 4 | Mode invité persistant | ✅ fait |
-| 5 | Commentaires par jeu et par liste | ⏳ en cours |
-| 6 | Compte utilisateur | à faire |
+| 5 | Commentaires par jeu et par liste | ✅ fait |
+| 6 | Compte utilisateur | ⏳ en cours |
 | 7 | Partage en lecture seule par lien | à faire |
 
 ## Choix techniques
@@ -44,6 +44,13 @@ Stack : backend Spring Boot 3.5 / Java 21 (`backend/`), frontend Angular (`front
   restent côté serveur (H2 fichier). L'invité retrouve donc son wallet après fermeture de l'onglet ou du
   navigateur (vérifié en E2E avec un profil Chromium persistant fermé puis rouvert). Limite assumée : vider
   les données du site = perdre l'accès au wallet invité (d'où le compte, phase 6).
+- **Commentaires** : entité `GameComment` rattachée à (liste, rawgId) et non au `GameEntry` → retirer un jeu
+  conserve le commentaire, qui réapparaît si le jeu est rajouté ; il ne disparaît que par suppression
+  explicite (ou suppression de la liste). Un même jeu a un commentaire distinct par liste.
+  API : `PUT`/`DELETE /api/lists/{id}/games/{rawgId}/comment`, et
+  `POST …/comment/transfer {targetListId}`. **Choix** : « transférer » = *copier* vers une autre liste du
+  wallet qui contient le même jeu (la source garde son commentaire, celui de la cible est remplacé).
+  Le commentaire est renvoyé dans `GameDto.comment`.
 - **E2E** : `frontend/e2e/e2e.mjs` (Playwright installé globalement, pas une dépendance du projet) +
   `frontend/e2e/fake-rawg.mjs` (faux RAWG local, donc ni clé ni réseau).
 

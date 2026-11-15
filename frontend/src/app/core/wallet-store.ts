@@ -55,6 +55,18 @@ export class WalletStore {
     return this.attempt(async () => this.replace(await this.api.removeGame(listId, rawgId)));
   }
 
+  setComment(listId: number, rawgId: number, text: string): Promise<boolean> {
+    return this.attempt(async () => this.replace(await this.api.setComment(listId, rawgId, text)));
+  }
+
+  deleteComment(listId: number, rawgId: number): Promise<boolean> {
+    return this.attempt(async () => this.replace(await this.api.deleteComment(listId, rawgId)));
+  }
+
+  transferComment(listId: number, rawgId: number, targetListId: number): Promise<boolean> {
+    return this.attempt(async () => this.replace(await this.api.transferComment(listId, rawgId, targetListId)));
+  }
+
   /** Runs an action; on failure, publishes the message and returns false. */
   async attempt(action: () => Promise<unknown>): Promise<boolean> {
     try {

@@ -3,6 +3,8 @@ export interface Game {
   name: string;
   released: string | null;
   backgroundImage: string | null;
+  /** The user's commentary on this game in this list (absent in search results). */
+  comment?: string | null;
 }
 
 export interface GamesList {

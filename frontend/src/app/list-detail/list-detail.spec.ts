@@ -10,6 +10,9 @@ describe('ListDetail', () => {
     renameList: vi.fn(),
     removeGame: vi.fn(),
     deleteList: vi.fn(),
+    setComment: vi.fn(),
+    deleteComment: vi.fn(),
+    transferComment: vi.fn(),
     searchGames: vi.fn(),
   };
 
@@ -18,7 +21,10 @@ describe('ListDetail', () => {
     api.wallet.mockResolvedValue({
       id: 'w',
       background: 'cozy',
-      lists: [gamesList(1, 'Liked', game(1, 'Hades'), game(2, 'Celeste'))],
+      lists: [
+        gamesList(1, 'Liked', { ...game(1, 'Hades'), comment: 'Loved it' }, game(2, 'Celeste')),
+        gamesList(2, 'To replay', game(1, 'Hades')),
+      ],
     });
     TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: Api, useValue: api }] });
     const fixture = TestBed.createComponent(ListDetail);
@@ -68,6 +74,49 @@ describe('ListDetail', () => {
     await settle();
     expect(api.deleteList).toHaveBeenCalledWith(1);
     expect(navigate).toHaveBeenCalledWith('/');
+  });
+
+  it('shows, saves and deletes the commentary of a game', async () => {
+    const { fixture, page } = await render('1');
+    const hades = page.querySelector<HTMLTextAreaElement>('[aria-label="Commentary on Hades"]')!;
+    const celeste = page.querySelector<HTMLTextAreaElement>('[aria-label="Commentary on Celeste"]')!;
+    expect(hades.value).toBe('Loved it');
+    expect(celeste.value).toBe('');
+    const buttons = (label: string) =>
+      [...page.querySelectorAll<HTMLButtonElement>('.game button')].filter((b) => b.textContent?.trim() === label);
+    expect(buttons('Delete commentary').length).toBe(1);
+
+    api.setComment.mockResolvedValue(
+      gamesList(1, 'Liked', { ...game(1, 'Hades'), comment: 'Loved it' }, { ...game(2, 'Celeste'), comment: 'Hard' }),
+    );
+    celeste.value = ' Hard ';
+    buttons('Save commentary')[1].click();
+    await settle();
+    await fixture.whenStable();
+    expect(api.setComment).toHaveBeenCalledWith(1, 2, 'Hard');
+    expect(buttons('Delete commentary').length).toBe(2);
+
+    api.deleteComment.mockResolvedValue(gamesList(1, 'Liked', game(1, 'Hades'), { ...game(2, 'Celeste'), comment: 'Hard' }));
+    buttons('Delete commentary')[0].click();
+    await settle();
+    await fixture.whenStable();
+    expect(api.deleteComment).toHaveBeenCalledWith(1, 1);
+    expect(hades.value).toBe('');
+  });
+
+  it('copies a commentary to another list that contains the same game', async () => {
+    const { fixture, page } = await render('1');
+    const copy = [...page.querySelectorAll<HTMLButtonElement>('.game button')].filter((b) =>
+      b.textContent?.includes('Copy to'),
+    );
+    expect(copy.map((b) => b.textContent?.trim())).toEqual(['Copy to “To replay”']); // Celeste is only in this list
+
+    api.transferComment.mockResolvedValue(gamesList(2, 'To replay', { ...game(1, 'Hades'), comment: 'Loved it' }));
+    copy[0].click();
+    await settle();
+    await fixture.whenStable();
+    expect(api.transferComment).toHaveBeenCalledWith(1, 1, 2);
+    expect(page.querySelector('[role=status]')?.textContent).toContain('copied to “To replay”');
   });
 
   it('says so when the list does not exist', async () => {

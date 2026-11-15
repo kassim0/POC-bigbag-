@@ -26,10 +26,16 @@ public final class Dtos {
     public record RenameListRequest(@NotNull @Size(max = GamesList.NAME_MAX_LENGTH) String name) {
     }
 
+    public record CommentRequest(@NotBlank @Size(max = GameComment.MAX_LENGTH) String text) {
+    }
+
+    public record TransferCommentRequest(@NotNull Long targetListId) {
+    }
+
     public record BackgroundRequest(@NotBlank @Size(max = 50) String background) {
     }
 
-    public record GameDto(long rawgId, String name, String released, String backgroundImage) {
+    public record GameDto(long rawgId, String name, String released, String backgroundImage, String comment) {
     }
 
     public record GamesListDto(long id, String name, List<GameDto> games) {
