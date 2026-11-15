@@ -17,6 +17,35 @@ Stack : backend Spring Boot 3.5 / Java 21 (`backend/`), frontend Angular (`front
 
 **Périmètre V0.1 du wiki terminé** (branche `claude/bingbang-v0.1`). Voir « Reste à faire / pistes » en bas.
 
+## Catalogue local (import IGDB) — demandé après la V0.1
+
+| Étape | État |
+|-------|------|
+| Batch d'import IGDB → base locale (`backend/.../catalog/`) | ✅ fait (testé avec IGDB simulé, **pas encore lancé en réel**) |
+| Brancher la recherche de l'appli sur le catalogue local (au lieu de RAWG) | à faire — à confirmer avec l'utilisateur |
+
+- **But** : avoir notre propre base de jeux, sans dépendre d'une source externe à l'exécution.
+- **Tables** : `CatalogGame` (clé = id IGDB ; nom, slug, résumé, date de 1re sortie, id d'image de jaquette,
+  note /100 + nombre de notes, `updated_at` IGDB), `CatalogGenre`, `CatalogPlatform` (liens N-N), `ImportState`.
+  Jaquette : `https://images.igdb.com/igdb/image/upload/t_cover_big/{coverImageId}.jpg`.
+- **Parcours** (`IgdbImportJob`) : pagination par id croissant (`where id > curseur; sort id asc; limit 500`),
+  plus fiable qu'un offset pendant que la base IGDB bouge. 1er passage = toute la base ; passages suivants =
+  seulement `updated_at > début du passage précédent − 1 h` (recouvrement de sécurité). Le curseur est
+  enregistré dans la même transaction que chaque page → reprise exacte après une interruption.
+  Pause entre pages (limite IGDB : 4 requêtes/s), nouvelles tentatives sur 429/5xx, jeton renouvelé sur 401.
+- **Auth** (`IgdbClient`) : jeton d'application Twitch (client credentials) ; `IGDB_CLIENT_ID` et
+  `IGDB_CLIENT_SECRET` en variables d'environnement, jamais commités ; le secret part dans le corps du POST.
+- **Lancement** : `IGDB_IMPORT_ON_STARTUP=true` (une fois au démarrage, en arrière-plan) et/ou
+  `IGDB_IMPORT_CRON="0 0 4 * * *"` (cron Spring ; `-` = jamais, valeur par défaut).
+  Réglages `bingbang.igdb.import.*` : `page-size`, `pause-ms`, `max-pages-per-run`, `where` (filtre IGDB
+  optionnel pour n'importer qu'une partie, ex. `total_rating_count > 0`).
+- **Limites connues** : les jeux supprimés côté IGDB ne sont pas retirés localement ; pas d'import des
+  captures d'écran, sociétés, etc. (facile à ajouter dans `IgdbClient.FIELDS` + `CatalogWriter`).
+- **Non vérifié en réel** : `api.igdb.com` et `id.twitch.tv` sont bloqués par le réseau de la session cloud.
+  Premier essai conseillé en local avec `bingbang.igdb.import.max-pages-per-run=2`.
+- **Suite logique** : recherche sur `CatalogGame` et remplacement de `rawgId` par l'id IGDB dans les listes
+  (les listes existantes référencent des ids RAWG : migration ou remise à zéro à décider).
+
 ## Choix techniques
 
 - **RAWG** : `RawgClient` (Spring `RestClient`) appelle `GET /games?key=…&search=…`. La clé est lue dans la

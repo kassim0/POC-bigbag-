@@ -16,4 +16,15 @@ cd backend && RAWG_API_KEY=your-key mvn spring-boot:run
 cd frontend && npm install && npx ng serve
 ```
 
+## Own games catalogue (IGDB import)
+
+A batch copies IGDB's games (with genres, platforms, cover, release date, rating) into BingBang's own
+database, then keeps it up to date. It needs a Twitch application (client id + secret):
+
+```bash
+cd backend && IGDB_CLIENT_ID=xxx IGDB_CLIENT_SECRET=yyy IGDB_IMPORT_ON_STARTUP=true mvn spring-boot:run
+# or on a schedule, e.g. every night at 4:00
+IGDB_IMPORT_CRON="0 0 4 * * *"
+```
+
 See [PROGRESS.md](PROGRESS.md) for the state of the work and the technical choices.
