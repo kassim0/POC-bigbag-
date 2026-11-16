@@ -21,7 +21,7 @@ Stack : backend Spring Boot 3.5 / Java 21 (`backend/`), frontend Angular (`front
 
 | Étape | État |
 |-------|------|
-| Batch d'import IGDB → base locale (`backend/.../catalog/`) | ✅ fait (testé avec IGDB simulé, **pas encore lancé en réel**) |
+| Batch d'import IGDB → base locale (`backend/.../catalog/`) | ✅ fait, vérifié en réel sur 2 000 jeux |
 | Brancher la recherche de l'appli sur le catalogue local (au lieu de RAWG) | à faire — à confirmer avec l'utilisateur |
 
 - **But** : avoir notre propre base de jeux, sans dépendre d'une source externe à l'exécution.
@@ -41,8 +41,11 @@ Stack : backend Spring Boot 3.5 / Java 21 (`backend/`), frontend Angular (`front
   optionnel pour n'importer qu'une partie, ex. `total_rating_count > 0`).
 - **Limites connues** : les jeux supprimés côté IGDB ne sont pas retirés localement ; pas d'import des
   captures d'écran, sociétés, etc. (facile à ajouter dans `IgdbClient.FIELDS` + `CatalogWriter`).
-- **Non vérifié en réel** : `api.igdb.com` et `id.twitch.tv` sont bloqués par le réseau de la session cloud.
-  Premier essai conseillé en local avec `bingbang.igdb.import.max-pages-per-run=2`.
+- **Vérifié en réel (2026-11-16)** : le batch a tourné contre le vrai IGDB, 2 passages plafonnés à 2 pages →
+  2 000 jeux (ids 1 à 2061), 23 genres, 111 plateformes, reprise correcte au curseur entre les deux passages.
+  IGDB annonce ~388 000 jeux, soit ~780 requêtes pour un import complet (de l'ordre de 10–15 min).
+  Non vérifié : l'obtention du jeton auprès de Twitch (`id.twitch.tv` bloqué dans la session cloud ; le test
+  a utilisé un jeton fourni par l'utilisateur via le proxy) et un import complet.
 - **Suite logique** : recherche sur `CatalogGame` et remplacement de `rawgId` par l'id IGDB dans les listes
   (les listes existantes référencent des ids RAWG : migration ou remise à zéro à décider).
 
