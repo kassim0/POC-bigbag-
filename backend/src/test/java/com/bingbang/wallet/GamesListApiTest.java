@@ -46,8 +46,9 @@ class GamesListApiTest extends ApiTestSupport {
                 .andExpect(jsonPath("$.name").value(""))
                 .andExpect(jsonPath("$.games.length()").value(2))
                 .andExpect(jsonPath("$.games[0].name").value("Hades"))
-                .andExpect(jsonPath("$.games[0].backgroundImage").value("https://img/1.jpg"))
-                .andExpect(jsonPath("$.games[1].rawgId").value(2));
+                .andExpect(jsonPath("$.games[0].released").value("2020-01-01"))
+                .andExpect(jsonPath("$.games[0].coverUrl").value(coverUrl(1)))
+                .andExpect(jsonPath("$.games[1].gameId").value(2));
     }
 
     @Test
@@ -79,6 +80,9 @@ class GamesListApiTest extends ApiTestSupport {
                 .andExpect(jsonPath("$.games[1].name").value("Tunic"));
         mvc.perform(as(token, body(post("/api/lists/" + id + "/games"), "{\"name\": \"no id\"}")))
                 .andExpect(status().isBadRequest());
+        mvc.perform(as(token, body(post("/api/lists/" + id + "/games"), "{\"gameId\": 987654321}")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("This game is not in the catalogue"));
 
         // A list that has games may lose its name.
         mvc.perform(as(token, body(patch("/api/lists/" + id), "{\"name\": \"\"}")))
@@ -87,7 +91,7 @@ class GamesListApiTest extends ApiTestSupport {
         mvc.perform(as(token, delete("/api/lists/" + id + "/games/10")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.games.length()").value(1))
-                .andExpect(jsonPath("$.games[0].rawgId").value(11));
+                .andExpect(jsonPath("$.games[0].gameId").value(11));
         mvc.perform(as(token, delete("/api/lists/" + id + "/games/10"))).andExpect(status().isNotFound());
 
         mvc.perform(as(token, get("/api/lists/" + id)))

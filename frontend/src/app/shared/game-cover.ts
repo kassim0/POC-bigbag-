@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { Game } from '../core/models';
 
-/** Thumbnail of a game (RAWG picture, or a placeholder when there is none). */
+/** Cover of a game, or a placeholder when it has none. */
 @Component({
   selector: 'app-game-cover',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -16,9 +16,5 @@ import { Game } from '../core/models';
 export class GameCover {
   readonly game = input.required<Game>();
 
-  /** RAWG serves resized pictures under /media/crop/{w}/{h}/. */
-  protected readonly src = computed(() => {
-    const url = this.game().backgroundImage;
-    return url?.replace(/^(https:\/\/media\.rawg\.io\/media)\/(?!crop\/|resize\/)/, '$1/crop/600/400/') ?? null;
-  });
+  protected readonly src = computed(() => this.game().coverUrl);
 }

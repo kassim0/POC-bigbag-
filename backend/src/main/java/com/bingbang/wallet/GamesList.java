@@ -80,11 +80,11 @@ public class GamesList {
         return comments;
     }
 
-    public Optional<GameComment> commentOf(long rawgId) {
-        return comments.stream().filter(c -> c.getRawgId() == rawgId).findFirst();
+    public Optional<GameComment> commentOf(long gameId) {
+        return comments.stream().filter(c -> c.getGameId() == gameId).findFirst();
     }
 
-    public boolean contains(long rawgId) {
-        return games.stream().anyMatch(g -> g.getRawgId() == rawgId);
+    public boolean contains(long gameId) {
+        return games.stream().anyMatch(g -> g.getGameId() == gameId);
     }
 }

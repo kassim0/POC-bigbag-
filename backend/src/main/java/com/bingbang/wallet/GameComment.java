@@ -13,11 +13,11 @@ import jakarta.persistence.UniqueConstraint;
 
 /**
  * The commentary of a user on a game, in one GamesList.
- * It is attached to the list and the RAWG id, not to the {@link GameEntry}: removing the game from
+ * It is attached to the list and the catalogue game id, not to the {@link GameEntry}: removing the game from
  * the list keeps the commentary, which shows up again if the game is added back.
  */
 @Entity
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"list_id", "rawg_id"}))
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"list_id", "game_id"}))
 public class GameComment {
 
     public static final int MAX_LENGTH = 2000;
@@ -30,8 +30,8 @@ public class GameComment {
     @JoinColumn(name = "list_id")
     private GamesList list;
 
-    @Column(name = "rawg_id", nullable = false)
-    private long rawgId;
+    @Column(name = "game_id", nullable = false)
+    private long gameId;
 
     @Column(nullable = false, length = MAX_LENGTH)
     private String text;
@@ -39,14 +39,14 @@ public class GameComment {
     protected GameComment() {
     }
 
-    public GameComment(GamesList list, long rawgId, String text) {
+    public GameComment(GamesList list, long gameId, String text) {
         this.list = list;
-        this.rawgId = rawgId;
+        this.gameId = gameId;
         this.text = text;
     }
 
-    public long getRawgId() {
-        return rawgId;
+    public long getGameId() {
+        return gameId;
     }
 
     public String getText() {

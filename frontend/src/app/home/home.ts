@@ -20,7 +20,7 @@ export class Home {
   protected readonly sharing = signal(false);
   protected readonly newName = signal('');
   protected readonly newGames = signal<Game[]>([]);
-  protected readonly newGameIds = computed(() => this.newGames().map((g) => g.rawgId));
+  protected readonly newGameIds = computed(() => this.newGames().map((g) => g.gameId));
   /** Wiki V0.1: a list needs at least a name or games. */
   protected readonly canCreate = computed(() => this.newName().trim().length > 0 || this.newGames().length > 0);
 
@@ -29,11 +29,11 @@ export class Home {
   }
 
   protected pick(game: Game): void {
-    this.newGames.update((games) => (games.some((g) => g.rawgId === game.rawgId) ? games : [...games, game]));
+    this.newGames.update((games) => (games.some((g) => g.gameId === game.gameId) ? games : [...games, game]));
   }
 
   protected unpick(game: Game): void {
-    this.newGames.update((games) => games.filter((g) => g.rawgId !== game.rawgId));
+    this.newGames.update((games) => games.filter((g) => g.gameId !== game.gameId));
   }
 
   protected async create(event: Event): Promise<void> {

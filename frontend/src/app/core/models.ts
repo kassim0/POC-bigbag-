@@ -1,8 +1,10 @@
+/** A game of BingBang's catalogue. */
 export interface Game {
-  rawgId: number;
+  /** Id in the catalogue (the IGDB id). */
+  gameId: number;
   name: string;
   released: string | null;
-  backgroundImage: string | null;
+  coverUrl: string | null;
   /** The user's commentary on this game in this list (absent in search results). */
   comment?: string | null;
 }

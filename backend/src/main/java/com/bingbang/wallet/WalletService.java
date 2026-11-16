@@ -8,6 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.bingbang.account.UserAccount;
 import com.bingbang.account.UserAccountRepository;
+import com.bingbang.catalog.CatalogGame;
+import com.bingbang.catalog.CatalogRepositories;
 import com.bingbang.common.ApiException;
 import com.bingbang.wallet.Dtos.CreateListRequest;
 import com.bingbang.wallet.Dtos.GameDto;
@@ -24,7 +26,11 @@ public class WalletService {
 
     private final UserAccountRepository users;
 
-    public WalletService(WalletRepository wallets, GamesListRepository lists, UserAccountRepository users) {
+    private final CatalogRepositories.Games catalog;
+
+    public WalletService(WalletRepository wallets, GamesListRepository lists, UserAccountRepository users,
+                         CatalogRepositories.Games catalog) {
+        this.catalog = catalog;
         this.wallets = wallets;
         this.lists = lists;
         this.users = users;
@@ -61,8 +67,8 @@ public class WalletService {
         }
         GamesList list = new GamesList(wallet(walletId), name);
         for (GameRequest game : games) {
-            if (!list.contains(game.rawgId())) {
-                list.getGames().add(toEntry(list, game));
+            if (!list.contains(game.gameId())) {
+                list.getGames().add(new GameEntry(list, catalogGame(game.gameId())));
             }
         }
         return toDto(lists.save(list));
@@ -84,32 +90,32 @@ public class WalletService {
 
     public GamesListDto addGame(String walletId, long listId, GameRequest game) {
         GamesList list = list(walletId, listId);
-        if (list.contains(game.rawgId())) {
+        if (list.contains(game.gameId())) {
             throw new ApiException(HttpStatus.CONFLICT, "This game is already in the list");
         }
-        list.getGames().add(toEntry(list, game));
+        list.getGames().add(new GameEntry(list, catalogGame(game.gameId())));
         lists.saveAndFlush(list);
         return toDto(list);
     }
 
-    public GamesListDto removeGame(String walletId, long listId, long rawgId) {
+    public GamesListDto removeGame(String walletId, long listId, long gameId) {
         GamesList list = list(walletId, listId);
-        if (!list.getGames().removeIf(g -> g.getRawgId() == rawgId)) {
+        if (!list.getGames().removeIf(g -> g.getGameId() == gameId)) {
             throw ApiException.notFound("This game is not in the list");
         }
         return toDto(list);
     }
 
-    public GamesListDto setComment(String walletId, long listId, long rawgId, String text) {
-        GamesList list = listWithGame(walletId, listId, rawgId);
-        writeComment(list, rawgId, text.trim());
+    public GamesListDto setComment(String walletId, long listId, long gameId, String text) {
+        GamesList list = listWithGame(walletId, listId, gameId);
+        writeComment(list, gameId, text.trim());
         return toDto(list);
     }
 
     /** Deletes the commentary itself (removing the game does not). */
-    public GamesListDto deleteComment(String walletId, long listId, long rawgId) {
+    public GamesListDto deleteComment(String walletId, long listId, long gameId) {
         GamesList list = list(walletId, listId);
-        if (!list.getComments().removeIf(c -> c.getRawgId() == rawgId)) {
+        if (!list.getComments().removeIf(c -> c.getGameId() == gameId)) {
             throw ApiException.notFound("This game has no commentary");
         }
         return toDto(list);
@@ -119,30 +125,30 @@ public class WalletService {
      * Copies the commentary of a game to another list of the wallet that contains the same game,
      * replacing the commentary it may have there. Returns the target list.
      */
-    public GamesListDto transferComment(String walletId, long listId, long rawgId, long targetListId) {
+    public GamesListDto transferComment(String walletId, long listId, long gameId, long targetListId) {
         if (listId == targetListId) {
             throw ApiException.badRequest("The commentary is already in this list");
         }
-        String text = list(walletId, listId).commentOf(rawgId)
+        String text = list(walletId, listId).commentOf(gameId)
                 .orElseThrow(() -> ApiException.notFound("This game has no commentary"))
                 .getText();
-        GamesList target = listWithGame(walletId, targetListId, rawgId);
-        writeComment(target, rawgId, text);
+        GamesList target = listWithGame(walletId, targetListId, gameId);
+        writeComment(target, gameId, text);
         return toDto(target);
     }
 
-    private GamesList listWithGame(String walletId, long listId, long rawgId) {
+    private GamesList listWithGame(String walletId, long listId, long gameId) {
         GamesList list = list(walletId, listId);
-        if (!list.contains(rawgId)) {
+        if (!list.contains(gameId)) {
             throw ApiException.notFound("This game is not in the list");
         }
         return list;
     }
 
-    private static void writeComment(GamesList list, long rawgId, String text) {
-        list.commentOf(rawgId).ifPresentOrElse(
+    private static void writeComment(GamesList list, long gameId, String text) {
+        list.commentOf(gameId).ifPresentOrElse(
                 c -> c.setText(text),
-                () -> list.getComments().add(new GameComment(list, rawgId, text)));
+                () -> list.getComments().add(new GameComment(list, gameId, text)));
     }
 
     private Wallet wallet(String walletId) {
@@ -154,14 +160,17 @@ public class WalletService {
                 .orElseThrow(() -> ApiException.notFound("Games list not found"));
     }
 
-    private static GameEntry toEntry(GamesList list, GameRequest game) {
-        return new GameEntry(list, game.rawgId(), game.name().trim(), game.released(), game.backgroundImage());
+    private CatalogGame catalogGame(long gameId) {
+        return catalog.findById(gameId).orElseThrow(() -> ApiException.notFound("This game is not in the catalogue"));
     }
 
     GamesListDto toDto(GamesList list) {
         List<GameDto> games = list.getGames().stream()
-                .map(g -> new GameDto(g.getRawgId(), g.getName(), g.getReleased(), g.getBackgroundImage(),
-                        list.commentOf(g.getRawgId()).map(GameComment::getText).orElse(null)))
+                .map(entry -> {
+                    CatalogGame game = entry.getGame();
+                    return new GameDto(game.getIgdbId(), game.getName(), game.getReleased(), game.getCoverUrl(),
+                            list.commentOf(game.getIgdbId()).map(GameComment::getText).orElse(null));
+                })
                 .toList();
         return new GamesListDto(list.getId(), list.getName(), games);
     }

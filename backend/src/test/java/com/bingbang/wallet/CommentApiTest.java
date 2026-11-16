@@ -14,8 +14,8 @@ import com.bingbang.ApiTestSupport;
 
 class CommentApiTest extends ApiTestSupport {
 
-    private ResultActions comment(String token, long listId, long rawgId, String text) throws Exception {
-        return mvc.perform(as(token, body(put("/api/lists/%d/games/%d/comment".formatted(listId, rawgId)),
+    private ResultActions comment(String token, long listId, long gameId, String text) throws Exception {
+        return mvc.perform(as(token, body(put("/api/lists/%d/games/%d/comment".formatted(listId, gameId)),
                 "{\"text\": \"%s\"}".formatted(text))));
     }
 

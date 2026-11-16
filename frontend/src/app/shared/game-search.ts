@@ -4,7 +4,7 @@ import { errorMessage } from '../core/errors';
 import { Game } from '../core/models';
 import { GameCover } from './game-cover';
 
-/** Search box over the RAWG catalogue; emits the game the user picks. */
+/** Search box over the games catalogue; emits the game the user picks. */
 @Component({
   selector: 'app-game-search',
   imports: [GameCover],
@@ -14,7 +14,7 @@ import { GameCover } from './game-cover';
       <span>{{ label() }}</span>
       <input
         type="search"
-        placeholder="Search the RAWG catalogue…"
+        placeholder="Search the games catalogue…"
         [value]="query()"
         (input)="onInput($any($event.target).value)"
       />
@@ -30,7 +30,7 @@ import { GameCover } from './game-cover';
     }
     @if (results().length) {
       <ul class="results">
-        @for (game of results(); track game.rawgId) {
+        @for (game of results(); track game.gameId) {
           <li>
             <app-game-cover [game]="game" />
             <span class="grow">
@@ -39,7 +39,7 @@ import { GameCover } from './game-cover';
                 <small class="muted">({{ game.released.slice(0, 4) }})</small>
               }
             </span>
-            @if (excluded().includes(game.rawgId)) {
+            @if (excluded().includes(game.gameId)) {
               <small class="muted">Added</small>
             } @else {
               <button type="button" class="small" (click)="picked.emit(game)">Add</button>
@@ -60,7 +60,7 @@ export class GameSearch {
   private requestId = 0;
 
   readonly label = input('Add a game');
-  /** rawgIds already in the list: shown as "Added" instead of an Add button. */
+  /** gameIds already in the list: shown as "Added" instead of an Add button. */
   readonly excluded = input<number[]>([]);
   readonly debounceMs = input(300);
   readonly picked = output<Game>();

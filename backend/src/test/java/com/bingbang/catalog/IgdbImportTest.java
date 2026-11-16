@@ -52,6 +52,8 @@ class IgdbImportTest {
     @Autowired
     private States states;
     @Autowired
+    private com.bingbang.wallet.GamesListRepository lists;
+    @Autowired
     private TransactionTemplate tx;
 
     private MockRestServiceServer igdb;
@@ -59,6 +61,8 @@ class IgdbImportTest {
 
     @BeforeEach
     void setUp() {
+        // Other tests put games of the catalogue in lists: clear those first.
+        tx.executeWithoutResult(status -> lists.deleteAll());
         games.deleteAll();
         genres.deleteAll();
         platforms.deleteAll();

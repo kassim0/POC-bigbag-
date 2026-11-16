@@ -194,8 +194,8 @@ main > .card {
 app-game-cover {
   flex: none;
   display: block;
-  width: 72px;
-  aspect-ratio: 3 / 2;
+  width: 48px;
+  aspect-ratio: 3 / 4;
   border-radius: 8px;
   overflow: hidden;
   background: var(--paper-soft);
@@ -228,7 +228,7 @@ app-game-cover img {
 }
 
 .game app-game-cover {
-  width: 120px;
+  width: 78px;
 }
 
 .game .comment {
@@ -242,7 +242,7 @@ app-game-cover img {
 }
 
 .results app-game-cover {
-  width: 56px;
+  width: 36px;
 }
 
 .grow {

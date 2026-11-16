@@ -10,7 +10,7 @@
       <h2 class="shared-title">{{ title(list) }}</h2>
       <p class="muted">{{ list.games.length }} {{ list.games.length === 1 ? 'game' : 'games' }}</p>
       <ul class="games">
-        @for (game of list.games; track game.rawgId) {
+        @for (game of list.games; track game.gameId) {
           <li class="game">
             <app-game-cover [game]="game" />
             <div class="grow">

@@ -23,7 +23,9 @@ export class Api {
   }
 
   createList(name: string, games: Game[]): Promise<GamesList> {
-    return firstValueFrom(this.http.post<GamesList>('/api/lists', { name, games }));
+    return firstValueFrom(
+      this.http.post<GamesList>('/api/lists', { name, games: games.map((g) => ({ gameId: g.gameId })) }),
+    );
   }
 
   renameList(listId: number, name: string): Promise<GamesList> {
@@ -35,25 +37,25 @@ export class Api {
   }
 
   addGame(listId: number, game: Game): Promise<GamesList> {
-    return firstValueFrom(this.http.post<GamesList>(`/api/lists/${listId}/games`, game));
+    return firstValueFrom(this.http.post<GamesList>(`/api/lists/${listId}/games`, { gameId: game.gameId }));
   }
 
-  removeGame(listId: number, rawgId: number): Promise<GamesList> {
-    return firstValueFrom(this.http.delete<GamesList>(`/api/lists/${listId}/games/${rawgId}`));
+  removeGame(listId: number, gameId: number): Promise<GamesList> {
+    return firstValueFrom(this.http.delete<GamesList>(`/api/lists/${listId}/games/${gameId}`));
   }
 
-  setComment(listId: number, rawgId: number, text: string): Promise<GamesList> {
-    return firstValueFrom(this.http.put<GamesList>(`/api/lists/${listId}/games/${rawgId}/comment`, { text }));
+  setComment(listId: number, gameId: number, text: string): Promise<GamesList> {
+    return firstValueFrom(this.http.put<GamesList>(`/api/lists/${listId}/games/${gameId}/comment`, { text }));
   }
 
-  deleteComment(listId: number, rawgId: number): Promise<GamesList> {
-    return firstValueFrom(this.http.delete<GamesList>(`/api/lists/${listId}/games/${rawgId}/comment`));
+  deleteComment(listId: number, gameId: number): Promise<GamesList> {
+    return firstValueFrom(this.http.delete<GamesList>(`/api/lists/${listId}/games/${gameId}/comment`));
   }
 
   /** Copies the commentary to the same game in another list; resolves with that other list. */
-  transferComment(listId: number, rawgId: number, targetListId: number): Promise<GamesList> {
+  transferComment(listId: number, gameId: number, targetListId: number): Promise<GamesList> {
     return firstValueFrom(
-      this.http.post<GamesList>(`/api/lists/${listId}/games/${rawgId}/comment/transfer`, { targetListId }),
+      this.http.post<GamesList>(`/api/lists/${listId}/games/${gameId}/comment/transfer`, { targetListId }),
     );
   }
 

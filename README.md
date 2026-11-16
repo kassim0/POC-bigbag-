@@ -1,7 +1,7 @@
 # BingBang
 
-Personal **games wallet**: create as many GamesLists as you want, fill them with games from the
-[RAWG](https://rawg.io/apidocs) catalogue, comment them and share them with a read-only link.
+Personal **games wallet**: create as many GamesLists as you want, fill them with games from BingBang's own
+catalogue (imported from [IGDB](https://api-docs.igdb.com)), comment them and share them with a read-only link.
 
 - `backend/` – Spring Boot (Java 21) REST API
 - `frontend/` – Angular single page app
@@ -9,15 +9,16 @@ Personal **games wallet**: create as many GamesLists as you want, fill them with
 ## Run it
 
 ```bash
-# 1. backend (http://localhost:8080) – needs a RAWG API key
-cd backend && RAWG_API_KEY=your-key mvn spring-boot:run
+# 1. backend (http://localhost:8080)
+cd backend && mvn spring-boot:run
 
 # 2. frontend (http://localhost:4200, proxies /api to the backend)
 cd frontend && npm install && npx ng serve
 ```
 
-## Own games catalogue (IGDB import)
+## Games catalogue (IGDB import)
 
+The app only searches its own database: run the import at least once, or the search finds nothing.
 A batch copies IGDB's games (with genres, platforms, cover, release date, rating) into BingBang's own
 database, then keeps it up to date. It needs a Twitch application (client id + secret):
 

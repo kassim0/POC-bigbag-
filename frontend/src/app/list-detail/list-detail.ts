@@ -28,10 +28,10 @@ export class ListDetail {
     const list = this.list();
     return list ? listTitle(list) : '';
   });
-  protected readonly gameIds = computed(() => this.list()?.games.map((g) => g.rawgId) ?? []);
+  protected readonly gameIds = computed(() => this.list()?.games.map((g) => g.gameId) ?? []);
   protected readonly confirmingDelete = signal(false);
-  /** rawgId of the game whose commentary was just copied, and where to. */
-  protected readonly transferred = signal<{ rawgId: number; to: string } | null>(null);
+  /** gameId of the game whose commentary was just copied, and where to. */
+  protected readonly transferred = signal<{ gameId: number; to: string } | null>(null);
   protected readonly listTitle = listTitle;
 
   constructor() {
@@ -54,7 +54,7 @@ export class ListDetail {
   }
 
   protected remove(game: Game): void {
-    void this.store.removeGame(Number(this.id()), game.rawgId);
+    void this.store.removeGame(Number(this.id()), game.gameId);
   }
 
   /** An empty text deletes the commentary. */
@@ -64,14 +64,14 @@ export class ListDetail {
       return;
     }
     if (text) {
-      await this.store.setComment(Number(this.id()), game.rawgId, text);
+      await this.store.setComment(Number(this.id()), game.gameId, text);
     } else {
       await this.deleteComment(game, textarea);
     }
   }
 
   protected async deleteComment(game: Game, textarea: HTMLTextAreaElement): Promise<void> {
-    if (await this.store.deleteComment(Number(this.id()), game.rawgId)) {
+    if (await this.store.deleteComment(Number(this.id()), game.gameId)) {
       textarea.value = '';
     }
   }
@@ -80,13 +80,13 @@ export class ListDetail {
   protected otherListsWith(game: Game): GamesList[] {
     const id = Number(this.id());
     return (this.store.wallet()?.lists ?? []).filter(
-      (l) => l.id !== id && l.games.some((g) => g.rawgId === game.rawgId),
+      (l) => l.id !== id && l.games.some((g) => g.gameId === game.gameId),
     );
   }
 
   protected async transfer(game: Game, target: GamesList): Promise<void> {
-    if (await this.store.transferComment(Number(this.id()), game.rawgId, target.id)) {
-      this.transferred.set({ rawgId: game.rawgId, to: listTitle(target) });
+    if (await this.store.transferComment(Number(this.id()), game.gameId, target.id)) {
+      this.transferred.set({ gameId: game.gameId, to: listTitle(target) });
     }
   }
 

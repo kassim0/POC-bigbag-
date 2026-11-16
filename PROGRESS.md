@@ -1,13 +1,14 @@
 # BingBang – suivi d'avancement
 
 Source fonctionnelle : wiki `kassim0/bingbang.wiki` (page **V0.1** ; « Future-ideas » ignorée).
-Stack : backend Spring Boot 3.5 / Java 21 (`backend/`), frontend Angular (`frontend/`), catalogue RAWG.
+Stack : backend Spring Boot 3.5 / Java 21 (`backend/`), frontend Angular (`frontend/`), catalogue de jeux
+**local**, alimenté depuis IGDB par un batch (RAWG, prévu au départ, a été abandonné à la demande de l'utilisateur).
 
 ## Phases
 
 | # | Phase | État |
 |---|-------|------|
-| 1 | Backend + recherche de jeux RAWG | ✅ fait |
+| 1 | Backend + recherche de jeux (RAWG à l'origine, aujourd'hui catalogue local) | ✅ fait |
 | 2 | CRUD GamesList (nom, ajout/retrait de jeux) | ✅ fait |
 | 3 | Frontend : accueil (3 premiers jeux par liste), détail/édition | ✅ fait |
 | 4 | Mode invité persistant | ✅ fait |
@@ -22,7 +23,7 @@ Stack : backend Spring Boot 3.5 / Java 21 (`backend/`), frontend Angular (`front
 | Étape | État |
 |-------|------|
 | Batch d'import IGDB → base locale (`backend/.../catalog/`) | ✅ fait, vérifié en réel sur 2 000 jeux |
-| Brancher la recherche de l'appli sur le catalogue local (au lieu de RAWG) | à faire — à confirmer avec l'utilisateur |
+| Recherche de l'appli branchée sur le catalogue local, RAWG retiré | ✅ fait |
 
 - **But** : avoir notre propre base de jeux, sans dépendre d'une source externe à l'exécution.
 - **Tables** : `CatalogGame` (clé = id IGDB ; nom, slug, résumé, date de 1re sortie, id d'image de jaquette,
@@ -46,22 +47,26 @@ Stack : backend Spring Boot 3.5 / Java 21 (`backend/`), frontend Angular (`front
   IGDB annonce ~388 000 jeux, soit ~780 requêtes pour un import complet (de l'ordre de 10–15 min).
   Non vérifié : l'obtention du jeton auprès de Twitch (`id.twitch.tv` bloqué dans la session cloud ; le test
   a utilisé un jeton fourni par l'utilisateur via le proxy) et un import complet.
-- **Suite logique** : recherche sur `CatalogGame` et remplacement de `rawgId` par l'id IGDB dans les listes
-  (les listes existantes référencent des ids RAWG : migration ou remise à zéro à décider).
+- **Recherche** : `GET /api/games/search?q=&page=&pageSize=` (`catalog/GameSearchController`) cherche dans
+  `CatalogGame` (nom contient, sans casse ; noms commençant par le texte d'abord, puis les plus notés).
+  Aucun service externe n'est appelé à l'exécution ; seules les images de jaquettes viennent d'`images.igdb.com`.
+  C'est un `LIKE '%texte%'` : suffisant pour un POC, à remplacer par un index plein texte si c'est lent sur ~388 000 jeux.
+- **Listes** : `GameEntry` référence un `CatalogGame` ; l'API désigne un jeu par `{gameId}` (id IGDB) et le
+  serveur lit nom/date/jaquette dans le catalogue (404 si le jeu n'y est pas). Champs JSON : `gameId`, `coverUrl`.
+- **Remise à zéro** : les anciennes listes référençaient des ids RAWG. La base de dev change de fichier
+  (`backend/data/bingbang-v2`) : wallets, comptes et listes repartent de zéro (décision validée par l'utilisateur).
+- **Catalogue vide = recherche vide** : lancer l'import au moins une fois (voir « Lancement »).
 
 ## Choix techniques
 
-- **RAWG** : `RawgClient` (Spring `RestClient`) appelle `GET /games?key=…&search=…`. La clé est lue dans la
-  variable d'environnement `RAWG_API_KEY` (jamais commitée). Endpoint exposé : `GET /api/games/search?q=&page=&pageSize=`.
-  Sans clé → 503 ; erreur RAWG → 502 (message générique, l'URL amont contenant la clé).
 - **Wallet & jeton** : toutes les données sont côté serveur. Un wallet est possédé par un jeton porteur
   (`Authorization: Bearer …`, seul son SHA-256 est stocké, table `AccessToken`). `POST /api/session/guest`
   crée un wallet vide + son jeton invité. Les contrôleurs reçoivent un paramètre `Session` (résolu par
   `SessionArgumentResolver`). Ce socle sert au mode invité (phase 4), aux comptes (6) et au partage (7).
 - **API listes** (toutes limitées au wallet de l'appelant, 404 sinon) : `GET/PATCH /api/wallet` (fond),
   `GET/POST /api/lists`, `GET/PATCH/DELETE /api/lists/{id}`, `POST /api/lists/{id}/games`,
-  `DELETE /api/lists/{id}/games/{rawgId}`. Règle wiki : une liste a besoin d'un nom **ou** de jeux.
-  Un jeu (`GameEntry`) garde une copie de nom/date/image RAWG ; un même jeu une seule fois par liste (409).
+  `DELETE /api/lists/{id}/games/{gameId}`. Règle wiki : une liste a besoin d'un nom **ou** de jeux.
+  Un même jeu une seule fois par liste (409).
 - **Persistance** : JPA + H2 fichier (`backend/data/`, ignoré par git) ; H2 en mémoire pour les tests.
 - **Erreurs** : `ApiException` + `ApiExceptionHandler` → corps JSON `{"error": "..."}`.
 - **CORS** : `bingbang.cors.allowed-origins` (par défaut `http://localhost:4200`).
@@ -71,17 +76,17 @@ Stack : backend Spring Boot 3.5 / Java 21 (`backend/`), frontend Angular (`front
     une session invité sur 401), `WalletStore` (état partagé en signals + message d'erreur), `Theme` (fond).
   - `home/` : accueil = wallet, cartes de listes (`shared/list-card` : 3 premiers jeux + « + n more »),
     formulaire de création (nom et/ou jeux), choix du fond (6 fonds prédéfinis, `body[data-bg]`).
-  - `list-detail/` : renommer (blur/Entrée), ajouter via `shared/game-search` (recherche RAWG avec debounce),
+  - `list-detail/` : renommer (blur/Entrée), ajouter via `shared/game-search` (recherche dans le catalogue, avec debounce),
     retirer, supprimer la liste (avec confirmation).
   - En dev, `ng serve` proxifie `/api` vers `localhost:8080` (`proxy.conf.json`).
 - **Mode invité persistant** : le jeton invité est gardé dans `localStorage` (`bingbang.token`) ; les données
   restent côté serveur (H2 fichier). L'invité retrouve donc son wallet après fermeture de l'onglet ou du
   navigateur (vérifié en E2E avec un profil Chromium persistant fermé puis rouvert). Limite assumée : vider
   les données du site = perdre l'accès au wallet invité (d'où le compte, phase 6).
-- **Commentaires** : entité `GameComment` rattachée à (liste, rawgId) et non au `GameEntry` → retirer un jeu
+- **Commentaires** : entité `GameComment` rattachée à (liste, id du jeu) et non au `GameEntry` → retirer un jeu
   conserve le commentaire, qui réapparaît si le jeu est rajouté ; il ne disparaît que par suppression
   explicite (ou suppression de la liste). Un même jeu a un commentaire distinct par liste.
-  API : `PUT`/`DELETE /api/lists/{id}/games/{rawgId}/comment`, et
+  API : `PUT`/`DELETE /api/lists/{id}/games/{gameId}/comment`, et
   `POST …/comment/transfer {targetListId}`. **Choix** : « transférer » = *copier* vers une autre liste du
   wallet qui contient le même jeu (la source garde son commentaire, celui de la cible est remplacé).
   Le commentaire est renvoyé dans `GameDto.comment`.
@@ -109,24 +114,21 @@ Stack : backend Spring Boot 3.5 / Java 21 (`backend/`), frontend Angular (`front
     révoquer) et route publique `/shared/:shareId` (`shared-view/`), sans aucun contrôle d'édition.
     L'intercepteur n'ajoute pas de jeton sur `/api/shared/` : un visiteur ne crée pas de wallet.
 - **E2E** : `frontend/e2e/e2e.mjs` (Playwright installé globalement, pas une dépendance du projet) +
-  `frontend/e2e/fake-rawg.mjs` (faux RAWG local, donc ni clé ni réseau).
+  `frontend/e2e/fake-igdb.mjs` (faux Twitch + IGDB local : le batch y remplit le catalogue au démarrage,
+  donc ni identifiants ni réseau).
 
 ## Commandes
 
-- Backend : `cd backend && mvn test` · lancer : `RAWG_API_KEY=xxx mvn spring-boot:run`
+- Backend : `cd backend && mvn test` · lancer : `IGDB_CLIENT_ID=… IGDB_CLIENT_SECRET=… mvn spring-boot:run`
 - Frontend : `cd frontend && npm install && npx ng build && npx ng test --watch=false` · lancer : `npx ng serve`
-- E2E : `node e2e/fake-rawg.mjs` + backend avec `--rawg.base-url=http://localhost:9099/api --rawg.api-key=fake`
-  + `npx ng serve`, puis `node e2e/e2e.mjs`
-
-## Points d'attention
-
-- RAWG n'accepte la clé qu'en paramètre d'URL `key=`. Dans la session cloud, le secret réseau enregistré pour
-  `api.rawg.io` est injecté en en-tête HTTP par le proxy : il ne peut donc pas servir à un appel réel.
-  L'intégration RAWG est couverte par des tests avec serveur HTTP simulé ; à valider en local avec une vraie clé.
+- E2E : `node e2e/fake-igdb.mjs` + backend avec `IGDB_CLIENT_ID=fake IGDB_CLIENT_SECRET=fake
+  IGDB_IMPORT_ON_STARTUP=true` et `--bingbang.igdb.api-url=http://localhost:9099/v4
+  --bingbang.igdb.token-url=http://localhost:9099/oauth2/token` + `npx ng serve`, puis `node e2e/e2e.mjs`
 
 ## Reste à faire / pistes (hors périmètre V0.1)
 
-- Valider la recherche avec une vraie clé RAWG (`RAWG_API_KEY`) : non testable dans la session cloud (voir ci-dessus).
+- Lancer un import IGDB complet et vérifier l'obtention du jeton Twitch par l'application (non testés en session cloud).
+- Recherche : index plein texte si le `LIKE` est trop lent ; retrait des jeux supprimés côté IGDB.
 - Déploiement : servir `frontend/dist` avec un fallback SPA vers `index.html` (liens `/shared/...`, `/lists/...`)
   et router `/api` vers le backend ; passer H2 à une vraie base (PostgreSQL) + migrations (Flyway).
 - Compte : changement/réinitialisation de mot de passe, suppression, limitation des tentatives, expiration des sessions.

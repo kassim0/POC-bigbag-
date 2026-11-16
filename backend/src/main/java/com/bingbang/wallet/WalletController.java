@@ -81,26 +81,26 @@ public class WalletController {
         return service.addGame(session.walletId(), listId, game);
     }
 
-    @DeleteMapping("/lists/{listId}/games/{rawgId}")
-    public GamesListDto removeGame(Session session, @PathVariable long listId, @PathVariable long rawgId) {
-        return service.removeGame(session.walletId(), listId, rawgId);
+    @DeleteMapping("/lists/{listId}/games/{gameId}")
+    public GamesListDto removeGame(Session session, @PathVariable long listId, @PathVariable long gameId) {
+        return service.removeGame(session.walletId(), listId, gameId);
     }
 
-    @PutMapping("/lists/{listId}/games/{rawgId}/comment")
-    public GamesListDto setComment(Session session, @PathVariable long listId, @PathVariable long rawgId,
+    @PutMapping("/lists/{listId}/games/{gameId}/comment")
+    public GamesListDto setComment(Session session, @PathVariable long listId, @PathVariable long gameId,
                                    @Valid @RequestBody CommentRequest request) {
-        return service.setComment(session.walletId(), listId, rawgId, request.text());
+        return service.setComment(session.walletId(), listId, gameId, request.text());
     }
 
-    @DeleteMapping("/lists/{listId}/games/{rawgId}/comment")
-    public GamesListDto deleteComment(Session session, @PathVariable long listId, @PathVariable long rawgId) {
-        return service.deleteComment(session.walletId(), listId, rawgId);
+    @DeleteMapping("/lists/{listId}/games/{gameId}/comment")
+    public GamesListDto deleteComment(Session session, @PathVariable long listId, @PathVariable long gameId) {
+        return service.deleteComment(session.walletId(), listId, gameId);
     }
 
     /** Copies the commentary to the same game in another list; returns that other list. */
-    @PostMapping("/lists/{listId}/games/{rawgId}/comment/transfer")
-    public GamesListDto transferComment(Session session, @PathVariable long listId, @PathVariable long rawgId,
+    @PostMapping("/lists/{listId}/games/{gameId}/comment/transfer")
+    public GamesListDto transferComment(Session session, @PathVariable long listId, @PathVariable long gameId,
                                         @Valid @RequestBody TransferCommentRequest request) {
-        return service.transferComment(session.walletId(), listId, rawgId, request.targetListId());
+        return service.transferComment(session.walletId(), listId, gameId, request.targetListId());
     }
 }

@@ -20,7 +20,7 @@
       <p class="muted">No game yet. Search the catalogue below to add your first one.</p>
     }
     <ul class="games">
-      @for (game of list.games; track game.rawgId) {
+      @for (game of list.games; track game.gameId) {
         <li class="game">
           <app-game-cover [game]="game" />
           <div class="grow">
@@ -56,7 +56,7 @@
                 }
               }
               @if (transferred(); as done) {
-                @if (done.rawgId === game.rawgId) {
+                @if (done.gameId === game.gameId) {
                   <small class="muted" role="status">Commentary copied to “{{ done.to }}”.</small>
                 }
               }

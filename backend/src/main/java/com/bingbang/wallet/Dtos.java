@@ -13,10 +13,8 @@ public final class Dtos {
     private Dtos() {
     }
 
-    public record GameRequest(@NotNull Long rawgId,
-                              @NotBlank @Size(max = 300) String name,
-                              @Size(max = 20) String released,
-                              @Size(max = 1000) String backgroundImage) {
+    /** Designates a game of the catalogue. */
+    public record GameRequest(@NotNull Long gameId) {
     }
 
     public record CreateListRequest(@Size(max = GamesList.NAME_MAX_LENGTH) String name,
@@ -35,7 +33,7 @@ public final class Dtos {
     public record BackgroundRequest(@NotBlank @Size(max = 50) String background) {
     }
 
-    public record GameDto(long rawgId, String name, String released, String backgroundImage, String comment) {
+    public record GameDto(long gameId, String name, String released, String coverUrl, String comment) {
     }
 
     public record GamesListDto(long id, String name, List<GameDto> games) {

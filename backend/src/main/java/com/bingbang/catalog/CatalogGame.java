@@ -36,7 +36,7 @@ public class CatalogGame {
 
     private LocalDate firstReleaseDate;
 
-    /** IGDB image id: https://images.igdb.com/igdb/image/upload/t_cover_big/{coverImageId}.jpg */
+    /** IGDB image id, see {@link #getCoverUrl()}. */
     @Column(length = 100)
     private String coverImageId;
 
@@ -132,6 +132,17 @@ public class CatalogGame {
 
     public void setIgdbUpdatedAt(long igdbUpdatedAt) {
         this.igdbUpdatedAt = igdbUpdatedAt;
+    }
+
+    /** ISO date of the first release, or null. */
+    public String getReleased() {
+        return firstReleaseDate == null ? null : firstReleaseDate.toString();
+    }
+
+    /** URL of the cover on IGDB's image server, or null when the game has none. */
+    public String getCoverUrl() {
+        return coverImageId == null ? null
+                : "https://images.igdb.com/igdb/image/upload/t_cover_big/" + coverImageId + ".jpg";
     }
 
     public Set<CatalogGenre> getGenres() {

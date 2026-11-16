@@ -51,7 +51,7 @@
       <app-game-search label="Games (optional)" [excluded]="newGameIds()" (picked)="pick($event)" />
       @if (newGames().length) {
         <ul class="chips">
-          @for (game of newGames(); track game.rawgId) {
+          @for (game of newGames(); track game.gameId) {
             <li>
               {{ game.name }}
               <button type="button" class="icon" [attr.aria-label]="'Remove ' + game.name" (click)="unpick(game)">

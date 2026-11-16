@@ -13,7 +13,7 @@ export const PREVIEW_SIZE = 3;
     <h2>{{ title() }}</h2>
     <p class="muted">{{ list().games.length }} {{ list().games.length === 1 ? 'game' : 'games' }}</p>
     <ul class="preview">
-      @for (game of preview(); track game.rawgId) {
+      @for (game of preview(); track game.gameId) {
         <li>
           <app-game-cover [game]="game" />
           <span>{{ game.name }}</span>

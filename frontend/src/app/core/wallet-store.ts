@@ -53,20 +53,20 @@ export class WalletStore {
     return this.attempt(async () => this.replace(await this.api.addGame(listId, game)));
   }
 
-  removeGame(listId: number, rawgId: number): Promise<boolean> {
-    return this.attempt(async () => this.replace(await this.api.removeGame(listId, rawgId)));
+  removeGame(listId: number, gameId: number): Promise<boolean> {
+    return this.attempt(async () => this.replace(await this.api.removeGame(listId, gameId)));
   }
 
-  setComment(listId: number, rawgId: number, text: string): Promise<boolean> {
-    return this.attempt(async () => this.replace(await this.api.setComment(listId, rawgId, text)));
+  setComment(listId: number, gameId: number, text: string): Promise<boolean> {
+    return this.attempt(async () => this.replace(await this.api.setComment(listId, gameId, text)));
   }
 
-  deleteComment(listId: number, rawgId: number): Promise<boolean> {
-    return this.attempt(async () => this.replace(await this.api.deleteComment(listId, rawgId)));
+  deleteComment(listId: number, gameId: number): Promise<boolean> {
+    return this.attempt(async () => this.replace(await this.api.deleteComment(listId, gameId)));
   }
 
-  transferComment(listId: number, rawgId: number, targetListId: number): Promise<boolean> {
-    return this.attempt(async () => this.replace(await this.api.transferComment(listId, rawgId, targetListId)));
+  transferComment(listId: number, gameId: number, targetListId: number): Promise<boolean> {
+    return this.attempt(async () => this.replace(await this.api.transferComment(listId, gameId, targetListId)));
   }
 
   /** Creates an account that takes over the current (guest) wallet. */

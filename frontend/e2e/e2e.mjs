@@ -1,5 +1,6 @@
 // End-to-end check of BingBang in a real browser.
-// Needs: fake RAWG (node e2e/fake-rawg.mjs), the backend pointed at it, and `ng serve` on :4200.
+// Needs: fake IGDB (node e2e/fake-igdb.mjs), the backend importing its catalogue from it (see that file),
+// and `ng serve` on :4200.
 // Usage: node e2e/e2e.mjs [baseUrl]
 import assert from 'node:assert/strict';
 import { mkdtempSync } from 'node:fs';
@@ -17,7 +18,7 @@ const step = (name) => console.log(`✓ ${name}`);
 const shot = async (page, name) => SHOTS && page.screenshot({ path: join(SHOTS, `${name}.png`), fullPage: true });
 
 async function addGame(page, query, name) {
-  await page.getByPlaceholder('Search the RAWG catalogue…').fill(query);
+  await page.getByPlaceholder('Search the games catalogue…').fill(query);
   await page.locator('.results li', { hasText: name }).first().getByRole('button', { name: 'Add' }).click();
 }
 
@@ -72,7 +73,7 @@ async function comments(page) {
 
   // Same game in a second list: its own commentary, and the first one can be copied there.
   await page.goto(BASE);
-  await page.getByPlaceholder('Search the RAWG catalogue…').fill('hades');
+  await page.getByPlaceholder('Search the games catalogue…').fill('hades');
   await page.locator('.results li', { hasText: 'Hades' }).first().getByRole('button', { name: 'Add' }).click();
   await page.getByPlaceholder('Games I liked, To play…').fill('To replay');
   await page.getByRole('button', { name: 'Create list' }).click();

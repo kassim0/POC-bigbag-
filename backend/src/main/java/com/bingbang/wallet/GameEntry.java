@@ -1,6 +1,7 @@
 package com.bingbang.wallet;
 
-import jakarta.persistence.Column;
+import com.bingbang.catalog.CatalogGame;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -8,9 +9,12 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
-/** A game of the RAWG catalogue placed in a GamesList (a snapshot of what is displayed is kept). */
+/** A game of the catalogue placed in a GamesList. */
 @Entity
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"list_id", "game_id"}))
 public class GameEntry {
 
     @Id
@@ -21,42 +25,23 @@ public class GameEntry {
     @JoinColumn(name = "list_id")
     private GamesList list;
 
-    @Column(nullable = false)
-    private long rawgId;
-
-    @Column(nullable = false, length = 300)
-    private String name;
-
-    @Column(length = 20)
-    private String released;
-
-    @Column(length = 1000)
-    private String backgroundImage;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "game_id")
+    private CatalogGame game;
 
     protected GameEntry() {
     }
 
-    public GameEntry(GamesList list, long rawgId, String name, String released, String backgroundImage) {
+    public GameEntry(GamesList list, CatalogGame game) {
         this.list = list;
-        this.rawgId = rawgId;
-        this.name = name;
-        this.released = released;
-        this.backgroundImage = backgroundImage;
+        this.game = game;
     }
 
-    public long getRawgId() {
-        return rawgId;
+    public CatalogGame getGame() {
+        return game;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public String getReleased() {
-        return released;
-    }
-
-    public String getBackgroundImage() {
-        return backgroundImage;
+    public long getGameId() {
+        return game.getIgdbId();
     }
 }
